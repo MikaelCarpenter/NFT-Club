@@ -1,0 +1,99 @@
+use anchor_lang::prelude::*;
+
+// 
+// Endpoints
+// 
+
+/*
+ * Create account and benefit in same function
+ * creator specifies the actual benefits in form when sign up
+ *
+ * Can program instructions handle variable amount of benefits
+ * Benefit seeds are passed in here as parameters
+ */
+/* program.rpc.createAccount on frontend*/
+pub fn create_account(ctx: Context<CreateAccount>, username: String, email: String, description: String, num_benefits: u8) -> ProgramResult {
+    let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
+    let authority: &Signer = &ctx.accounts.authority;
+
+    if username.chars().count() > 42 {
+        return Err(ErrorCode::UsernameTooLong.into())
+    }
+
+    if email.chars().count() > 42 {
+        return Err(ErrorCode::EmailTooLong.into())
+    }
+
+    if description.chars().count() > 420 {
+        return Err(ErrorCode::DescriptionTooLong.into())
+    }
+
+    creator.authority = *authority.key;
+    creator.username = username;
+    creator.email = email;
+    creator.description = description;
+    creator.num_benefits = num_benefits;
+
+    Ok(())
+}
+
+// 
+// Data Validators
+// 
+#[derive(Accounts)]
+pub struct CreateAccount<'info> {
+    // Create account of type Creator and assign creators's pubkey as the payer
+    #[account(init, payer = authority, space = Creator::LEN)]
+    pub creator: Account<'info, Creator>,
+
+    // Define user as mutable - money in their account, profile data, etc.
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    // Ensure System Program is the official one from Solana.
+    pub system_program: Program<'info, System>,
+}
+
+// 
+// Data Structures
+// 
+#[account]
+pub struct Creator {
+    pub authority: Pubkey,
+    pub username: String,
+    pub email: String,
+    pub description: String,
+    pub num_benefits: u8,
+}
+
+// Constants for sizing properties
+const DISCRIMINATOR_LENGTH: usize = 8;
+const PUBKEY_LENGTH: usize = 32;
+const STRING_LENGTH_PREFIX: usize = 4;
+const USERNAME_LENGTH: usize = 42 * 4;
+const EMAIL_LENGTH: usize = 42 * 4;
+const DESCRIPTION_LENGTH: usize = 420 * 4;
+const NUM_BENEFITS_LENGTH: usize = 1;
+
+
+impl Creator {
+    const LEN: usize = DISCRIMINATOR_LENGTH
+        + PUBKEY_LENGTH
+        + STRING_LENGTH_PREFIX + USERNAME_LENGTH
+        + STRING_LENGTH_PREFIX + EMAIL_LENGTH
+        + STRING_LENGTH_PREFIX + DESCRIPTION_LENGTH
+        + NUM_BENEFITS_LENGTH;
+}
+
+// 
+// Events
+// 
+#[error]
+pub enum ErrorCode {
+    #[msg("The provided username should be 42 characters long maximum.")]
+    UsernameTooLong,
+    #[msg("The provided email should be 42 characters long maximum.")]
+    EmailTooLong,
+    #[msg("The provided description should be 420 characters long maximum.")]
+    DescriptionTooLong,
+}

@@ -1,0 +1,6 @@
+target
+node_modules
+migrations
+app/.next
+app/*config*
+*.json

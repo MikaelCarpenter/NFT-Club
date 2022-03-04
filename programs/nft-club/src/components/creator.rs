@@ -12,20 +12,26 @@ use anchor_lang::prelude::*;
  * Benefit seeds are passed in here as parameters
  */
 /* program.rpc.createAccount on frontend*/
-pub fn create_account(ctx: Context<CreateAccount>, username: String, email: String, description: String, num_benefits: u8) -> ProgramResult {
+pub fn create_account(ctx: Context<CreateAccount>, username: String, email: String, description: String, num_benefits: u8) -> Result<()> {
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
     let authority: &Signer = &ctx.accounts.authority;
+    msg!("username: {}", username);
+    msg!("email: {}", email);
+    msg!("description: {}", description);
 
     if username.chars().count() > 42 {
-        return Err(ErrorCode::UsernameTooLong.into())
+        msg!("USERNAME");
+        return err!(ErrorCode::UsernameTooLong);
     }
 
     if email.chars().count() > 42 {
-        return Err(ErrorCode::EmailTooLong.into())
+        msg!("EMAIL");
+        return err!(ErrorCode::EmailTooLong);
     }
 
     if description.chars().count() > 420 {
-        return Err(ErrorCode::DescriptionTooLong.into())
+        msg!("DESCRIPTION_");
+        return err!(ErrorCode::DescriptionTooLong);
     }
 
     creator.authority = *authority.key;
@@ -88,7 +94,7 @@ impl Creator {
 // 
 // Events
 // 
-#[error]
+#[error_code]
 pub enum ErrorCode {
     #[msg("The provided username should be 42 characters long maximum.")]
     UsernameTooLong,

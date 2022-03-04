@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 // 
 // Endpoints
 // 
-pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> ProgramResult {
+pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
     let authority: &Signer = &ctx.accounts.authority;
 
@@ -73,8 +73,8 @@ impl Benefit {
 // 
 // Events
 // 
-#[error]
+#[error_code]
 pub enum ErrorCode {
     #[msg("The provided description should be 420 characters long maximum.")]
-    DescriptionTooLong,
+    DescriptionTooLong
 }

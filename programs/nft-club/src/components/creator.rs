@@ -3,30 +3,12 @@ use anchor_lang::prelude::*;
 // 
 // Endpoints
 // 
-
-/*
- * Create account and benefit in same function
- * creator specifies the actual benefits in form when sign up
- *
- * Can program instructions handle variable amount of benefits
- * Benefit seeds are passed in here as parameters
- */
-/* program.rpc.createAccount on frontend*/
-pub fn create_account(ctx: Context<CreateAccount>, username: String, email: String, description: String, num_benefits: u8) -> ProgramResult {
+pub fn create_account(ctx: Context<CreateAccount>, username: String, email: String, description: String, num_benefits: u8) -> Result<()> {
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
     let authority: &Signer = &ctx.accounts.authority;
-
-    if username.chars().count() > 42 {
-        return Err(ErrorCode::UsernameTooLong.into())
-    }
-
-    if email.chars().count() > 42 {
-        return Err(ErrorCode::EmailTooLong.into())
-    }
-
-    if description.chars().count() > 420 {
-        return Err(ErrorCode::DescriptionTooLong.into())
-    }
+    msg!("username: {}", username);
+    msg!("email: {}", email);
+    msg!("description: {}", description);
 
     creator.authority = *authority.key;
     creator.username = username;
@@ -41,6 +23,7 @@ pub fn create_account(ctx: Context<CreateAccount>, username: String, email: Stri
 // Data Validators
 // 
 #[derive(Accounts)]
+#[instruction(username: String, email: String, description: String)]
 pub struct CreateAccount<'info> {
     // Create account of type Creator and assign creators's pubkey as the payer
     #[account(init, payer = authority, space = Creator::LEN)]
@@ -50,7 +33,10 @@ pub struct CreateAccount<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    // Ensure System Program is the official one from Solana.
+    // Ensure System Program is the official one from Solana and handle errors
+    #[account(constraint = username.chars().count() <= 42 @ ErrorCode::UsernameTooLong)]
+    #[account(constraint = email.chars().count() <= 42 @ ErrorCode::EmailTooLong)]
+    #[account(constraint = description.chars().count() <= 420 @ ErrorCode::DescriptionTooLong)]
     pub system_program: Program<'info, System>,
 }
 
@@ -88,12 +74,14 @@ impl Creator {
 // 
 // Events
 // 
-#[error]
+#[error_code]
 pub enum ErrorCode {
-    #[msg("The provided username should be 42 characters long maximum.")]
+    #[msg("The provided Creator username should be 42 characters long maximum.")]
     UsernameTooLong,
-    #[msg("The provided email should be 42 characters long maximum.")]
+    #[msg("The provided Creator email should be 42 characters long maximum.")]
     EmailTooLong,
-    #[msg("The provided description should be 420 characters long maximum.")]
+    #[msg("The provided Creator description should be 420 characters long maximum.")]
     DescriptionTooLong,
+    #[msg("The provided Benefit description should be 420 characters long maximum.")]
+    BenefitDescriptionTooLong,
 }

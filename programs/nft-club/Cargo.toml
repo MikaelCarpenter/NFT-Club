@@ -1,6 +1,6 @@
 [package]
 name = "nft-club"
-version = "0.1.0"
+version = "0.11.0"
 description = "Created with Anchor"
 edition = "2018"
 
@@ -10,10 +10,7 @@ name = "nft_club"
 
 [features]
 no-entrypoint = []
-no-idl = []
-no-log-ix-name = []
 cpi = ["no-entrypoint"]
-default = []
 
 [dependencies]
-anchor-lang = "0.20.1"
+anchor-lang = "0.22.1"

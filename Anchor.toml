@@ -1,12 +1,12 @@
 [programs.localnet]
-nft_club = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+nft_club = "GZsTnQNL9b2mYSdFhY6iNHKR1M5Ect4hTp5k8ZmyUyHX"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+wallet = "~/.config/solana/DDS9fNSRutb3JaTEUGv25LdzUz4m9diYmFBA4L3fK2vm.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

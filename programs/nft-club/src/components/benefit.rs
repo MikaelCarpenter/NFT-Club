@@ -1,15 +1,16 @@
 use anchor_lang::prelude::*;
+use crate::*;
 
 // 
 // Endpoints
 // 
-pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> ProgramResult {
+pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
     let authority: &Signer = &ctx.accounts.authority;
+    let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
 
-    if description.chars().count() > 420 {
-        return Err(ErrorCode::DescriptionTooLong.into())
-    }
+    // Try to increment. If overflow, panic will propagate an error
+    creator.num_benefits = creator.num_benefits.checked_add(1).unwrap();
 
     benefit.authority = *authority.key;
     benefit.description = description;
@@ -21,16 +22,25 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Progr
 // Data Validators
 // 
 #[derive(Accounts)]
+#[instruction(description: String)]
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
     #[account(init, payer = authority, space = Benefit::LEN)]
     pub benefit: Account<'info, Benefit>,
 
+    // Guarantee that account is both signed by authority
+    // and that &creator.authority == authority.key
+    // In other words, signer must have a creator account to create a benefit
+    // Use here and for updating Benefit/Creator accounts
+    #[account(mut, has_one = authority)]
+    pub creator: Account<'info, Creator>,
+
     // Define user as mutable - money in their account, description
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    // Ensure System Program is the official one from Solana.
+    // Ensure System Program is the official one from Solana and handle errors
+    #[account(constraint = description.chars().count() <= 420 @ creator::ErrorCode::BenefitDescriptionTooLong)]
     pub system_program: Program<'info, System>,
 }
 
@@ -68,13 +78,4 @@ impl Benefit {
     const LEN: usize = DISCRIMINATOR_LENGTH
         + PUBKEY_LENGTH
         + STRING_LENGTH_PREFIX + DESCRIPTION_LENGTH;
-}
-
-// 
-// Events
-// 
-#[error]
-pub enum ErrorCode {
-    #[msg("The provided description should be 420 characters long maximum.")]
-    DescriptionTooLong,
 }

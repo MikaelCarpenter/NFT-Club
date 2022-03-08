@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use crate::creator::ErrorCode;
 
 // 
 // Endpoints
@@ -7,8 +8,9 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Resul
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
     let authority: &Signer = &ctx.accounts.authority;
 
+    // For some reason this just return the first error message in the IDL
     if description.chars().count() > 420 {
-        return Err(ErrorCode::DescriptionTooLong.into())
+        return err!(ErrorCode::BenefitDescriptionTooLong);
     }
 
     benefit.authority = *authority.key;
@@ -23,7 +25,9 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Resul
 #[derive(Accounts)]
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
-    #[account(init, payer = authority, space = Benefit::LEN)]
+    // has_one guarantees that account is both signed by authority
+    // and that &creator.authority == authority.key
+    #[account(init, payer = authority, has_one = authority, space = Benefit::LEN)]
     pub benefit: Account<'info, Benefit>,
 
     // Define user as mutable - money in their account, description
@@ -68,13 +72,4 @@ impl Benefit {
     const LEN: usize = DISCRIMINATOR_LENGTH
         + PUBKEY_LENGTH
         + STRING_LENGTH_PREFIX + DESCRIPTION_LENGTH;
-}
-
-// 
-// Events
-// 
-#[error_code]
-pub enum ErrorCode {
-    #[msg("The provided description should be 420 characters long maximum.")]
-    DescriptionTooLong
 }

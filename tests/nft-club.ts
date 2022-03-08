@@ -3,6 +3,13 @@ import { Program } from '@project-serum/anchor';
 import { NftClub } from '../target/types/nft_club';
 import * as assert from 'assert';
 
+/*
+ * Extra things that can be tested:
+ * Having over 255 benefits
+ * Creator and Benefit having different authority?
+ *
+ */
+
 describe('nft-club', () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.Provider.env());
@@ -12,13 +19,13 @@ describe('nft-club', () => {
   /*
    * Testing Creator account
    */
-  it('can create a creator account', async () => {
+  it('can create a Creator account', async () => {
     const creator = anchor.web3.Keypair.generate();
     const tx = await program.rpc.createAccount(
       'testUsername',
       'test@email.com',
       'test description',
-      3,
+      1,
       {
         accounts: {
           creator: creator.publicKey,
@@ -37,18 +44,17 @@ describe('nft-club', () => {
     assert.equal(creatorAccount.username, 'testUsername');
     assert.equal(creatorAccount.email, 'test@email.com');
     assert.equal(creatorAccount.description, 'test description');
-    assert.equal(creatorAccount.numBenefits, 3);
+    assert.equal(creatorAccount.numBenefits, 1);
   });
 
-  it('cannot provide a username longer than 42 characters', async () => {
+  it('cannot provide a Creator with username over 42 characters', async () => {
     try {
-      console.log('INSIDE TRY');
       const creator = anchor.web3.Keypair.generate();
       await program.rpc.createAccount(
         'x'.repeat(43),
         'test@email.com',
         'test description',
-        3,
+        1,
         {
           accounts: {
             creator: creator.publicKey,
@@ -58,26 +64,19 @@ describe('nft-club', () => {
           signers: [creator],
         }
       );
-      console.log('COMPLETED TRY');
     }
     catch(error) {
-      console.log('INSIDE CATCH');
-      console.log(error);
-      console.log('INSIDE CATCH');
-      assert.equal(error.msg, 'The provided username should be 42 characters long maximum.');
+      assert.equal(error.msg, 'The provided Creator username should be 42 characters long maximum.');
       return;
     }
-    console.log('REACHES ASSERT.FAIL');
-    console.log('REACHES ASSERT.FAIL');
     assert.fail('The instruction should have failed with a 43-character username');
   });
 
 
-  it('cannot provide an email with over 42 characters', async () => {
+  it('cannot provide a Creator with email over 42 characters', async () => {
     try {
       const creator = anchor.web3.Keypair.generate(); // Generate a keypair for accounts (publicKey) and signers
-      const emailWith43Chars = "x".repeat(43);
-      await program.rpc.createAccount('testUsername', emailWith43Chars, 'test description', 3, {
+      await program.rpc.createAccount('testUsername', "x".repeat(43), 'test description', 1, {
         accounts: {
           creator: creator.publicKey,
           authority: program.provider.wallet.publicKey,
@@ -87,15 +86,37 @@ describe('nft-club', () => {
       });
     }
     catch(error) {
-      assert.equal(error.msg, "The provided email should be 42 characters long maximum.");
+      assert.equal(error.msg, "The provided Creator email should be 42 characters long maximum.");
       return;
     }
 
     assert.fail("The instruction should have failed with a 43-character email.");
   });
 
-  it('can create a benefit account', async () => {
-    console.log('CREATING BENEFIT');
+  it('cannot provide a Creator with description over 420 characters', async () => {
+    try {
+      const creator = anchor.web3.Keypair.generate(); // Generate a keypair for accounts (publicKey) and signers
+      await program.rpc.createAccount('testUsername', 'test@email.com', 'x'.repeat(421), 1, {
+        accounts: {
+          creator: creator.publicKey,
+          authority: program.provider.wallet.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId
+        },
+        signers: [creator]
+      });
+    }
+    catch(error) {
+      assert.equal(error.msg, "The provided Creator description should be 420 characters long maximum.");
+      return;
+    }
+
+    assert.fail("The instruction should have failed with a 421-character description.");
+  });
+
+  /*
+   * Testing Benefit account
+   */
+  it('can create a Benefit account', async () => {
     const creator = anchor.web3.Keypair.generate();
     await program.rpc.createAccount(
       'testUsername',
@@ -114,20 +135,10 @@ describe('nft-club', () => {
     const creatorAccount = await program.account.creator.fetch(
       creator.publicKey
     );
-    console.log('CREATOR ACCOUNT');
-    console.log(creatorAccount);
-    console.log('CREATOR ACCOUNT');
 
-
-
-
-    /*
-     * THE BENEFIT PUBKEY SHOULD MATCH THE CREATOR'S
-     * MAKE ASSERTION TO ENSURE THIS
-     */
     const benefit = anchor.web3.Keypair.generate();
     const benefitTx = await program.rpc.createBenefit(
-      'test description',
+      'benefit test description',
       {
         accounts: {
           benefit: benefit.publicKey,
@@ -141,13 +152,60 @@ describe('nft-club', () => {
       benefit.publicKey
     );
     console.log('Your transaction signature', benefitTx);
-    assert.equal(benefitAccount.authority.toBase58(), program.provider.wallet.publicKey.toBase58());
-    assert.equal(benefitAccount.description, 'test description');
-    console.log('CREATED BENEFIT');
+    assert.equal(benefitAccount.authority.toBase58(), program.provider.wallet.publicKey.toBase58()); assert.equal(benefitAccount.authority.toBase58(), creatorAccount.authority.toBase58());
+    assert.equal(benefitAccount.description, 'benefit test description');
     console.log(benefitAccount);
   });
 
-  // Having 2 benefits for an account with 1 numBenefit should break
-  // How to test and enforce this?
+  it('cannot create a Benefit with description over 420 characters', async () => {
+    const creator = anchor.web3.Keypair.generate();
+    await program.rpc.createAccount(
+      'testUsername',
+      'test@email.com',
+      'test description',
+      1,
+      {
+        accounts: {
+          creator: creator.publicKey,
+          authority: program.provider.wallet.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        },
+        signers: [creator],
+      }
+    );
+    const creatorAccount = await program.account.creator.fetch(
+      creator.publicKey
+    );
+    console.log(program.provider.wallet.publicKey);
+    console.log(creatorAccount.authority);
 
+    try {
+      const benefit = anchor.web3.Keypair.generate();
+      const benefitTx = await program.rpc.createBenefit(
+        'x'.repeat(421),
+        {
+          accounts: {
+            benefit: benefit.publicKey,
+            authority: program.provider.wallet.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+          signers: [benefit],
+        }
+      );
+      const benefitAccount = await program.account.benefit.fetch(
+        benefit.publicKey
+      );
+      console.log('Your transaction signature', benefitTx);
+      console.log(benefitAccount);
+    }
+    catch(error) {
+      console.log("ERRRRRRRRRRRRRRRRRRRRRRR");
+      console.log(error);
+      console.log("ERRRRRRRRRRRRRRRRRRRRRRR");
+      assert.equal(error.msg, "The provided Benefit description should be 421 characters long maximum.");
+      return;
+    }
+
+    assert.fail("The instruction should have failed with a 421-character benefit description.");
+  });
 });

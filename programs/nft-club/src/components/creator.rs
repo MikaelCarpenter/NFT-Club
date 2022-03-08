@@ -3,15 +3,6 @@ use anchor_lang::prelude::*;
 // 
 // Endpoints
 // 
-
-/*
- * Create account and benefit in same function
- * creator specifies the actual benefits in form when sign up
- *
- * Can program instructions handle variable amount of benefits
- * Benefit seeds are passed in here as parameters
- */
-/* program.rpc.createAccount on frontend*/
 pub fn create_account(ctx: Context<CreateAccount>, username: String, email: String, description: String, num_benefits: u8) -> Result<()> {
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
     let authority: &Signer = &ctx.accounts.authority;
@@ -49,7 +40,9 @@ pub fn create_account(ctx: Context<CreateAccount>, username: String, email: Stri
 #[derive(Accounts)]
 pub struct CreateAccount<'info> {
     // Create account of type Creator and assign creators's pubkey as the payer
-    #[account(init, payer = authority, space = Creator::LEN)]
+    // has_one guarantees that account is both signed by authority
+    // and that &creator.authority == authority.key
+    #[account(init, payer = authority, has_one = authority, space = Creator::LEN)]
     pub creator: Account<'info, Creator>,
 
     // Define user as mutable - money in their account, profile data, etc.
@@ -96,10 +89,12 @@ impl Creator {
 // 
 #[error_code]
 pub enum ErrorCode {
-    #[msg("The provided username should be 42 characters long maximum.")]
+    #[msg("The provided Creator username should be 42 characters long maximum.")]
     UsernameTooLong,
-    #[msg("The provided email should be 42 characters long maximum.")]
+    #[msg("The provided Creator email should be 42 characters long maximum.")]
     EmailTooLong,
-    #[msg("The provided description should be 420 characters long maximum.")]
+    #[msg("The provided Creator description should be 420 characters long maximum.")]
     DescriptionTooLong,
+    #[msg("The provided Benefit description should be 420 characters long maximum.")]
+    BenefitDescriptionTooLong,
 }

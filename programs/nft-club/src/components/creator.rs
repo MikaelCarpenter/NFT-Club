@@ -10,21 +10,6 @@ pub fn create_account(ctx: Context<CreateAccount>, username: String, email: Stri
     msg!("email: {}", email);
     msg!("description: {}", description);
 
-    if username.chars().count() > 42 {
-        msg!("USERNAME");
-        return err!(ErrorCode::UsernameTooLong);
-    }
-
-    if email.chars().count() > 42 {
-        msg!("EMAIL");
-        return err!(ErrorCode::EmailTooLong);
-    }
-
-    if description.chars().count() > 420 {
-        msg!("DESCRIPTION_");
-        return err!(ErrorCode::DescriptionTooLong);
-    }
-
     creator.authority = *authority.key;
     creator.username = username;
     creator.email = email;
@@ -38,18 +23,20 @@ pub fn create_account(ctx: Context<CreateAccount>, username: String, email: Stri
 // Data Validators
 // 
 #[derive(Accounts)]
+#[instruction(username: String, email: String, description: String)]
 pub struct CreateAccount<'info> {
     // Create account of type Creator and assign creators's pubkey as the payer
-    // has_one guarantees that account is both signed by authority
-    // and that &creator.authority == authority.key
-    #[account(init, payer = authority, has_one = authority, space = Creator::LEN)]
+    #[account(init, payer = authority, space = Creator::LEN)]
     pub creator: Account<'info, Creator>,
 
     // Define user as mutable - money in their account, profile data, etc.
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    // Ensure System Program is the official one from Solana.
+    // Ensure System Program is the official one from Solana and handle errors
+    #[account(constraint = username.chars().count() <= 42 @ ErrorCode::UsernameTooLong)]
+    #[account(constraint = email.chars().count() <= 42 @ ErrorCode::EmailTooLong)]
+    #[account(constraint = description.chars().count() <= 420 @ ErrorCode::DescriptionTooLong)]
     pub system_program: Program<'info, System>,
 }
 

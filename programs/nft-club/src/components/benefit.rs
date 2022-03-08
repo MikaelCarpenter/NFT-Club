@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::creator::ErrorCode;
+use crate::*;
 
 // 
 // Endpoints
@@ -7,11 +7,10 @@ use crate::creator::ErrorCode;
 pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
     let authority: &Signer = &ctx.accounts.authority;
+    let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
 
-    // For some reason this just return the first error message in the IDL
-    if description.chars().count() > 420 {
-        return err!(ErrorCode::BenefitDescriptionTooLong);
-    }
+    // Try to increment. If overflow, panic will propagate an error
+    creator.num_benefits = creator.num_benefits.checked_add(1).unwrap();
 
     benefit.authority = *authority.key;
     benefit.description = description;
@@ -23,18 +22,25 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Resul
 // Data Validators
 // 
 #[derive(Accounts)]
+#[instruction(description: String)]
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
-    // has_one guarantees that account is both signed by authority
-    // and that &creator.authority == authority.key
-    #[account(init, payer = authority, has_one = authority, space = Benefit::LEN)]
+    #[account(init, payer = authority, space = Benefit::LEN)]
     pub benefit: Account<'info, Benefit>,
+
+    // Guarantee that account is both signed by authority
+    // and that &creator.authority == authority.key
+    // In other words, signer must have a creator account to create a benefit
+    // Use here and for updating Benefit/Creator accounts
+    #[account(mut, has_one = authority)]
+    pub creator: Account<'info, Creator>,
 
     // Define user as mutable - money in their account, description
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    // Ensure System Program is the official one from Solana.
+    // Ensure System Program is the official one from Solana and handle errors
+    #[account(constraint = description.chars().count() <= 420 @ creator::ErrorCode::BenefitDescriptionTooLong)]
     pub system_program: Program<'info, System>,
 }
 

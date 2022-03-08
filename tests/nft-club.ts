@@ -6,8 +6,6 @@ import * as assert from 'assert';
 /*
  * Extra things that can be tested:
  * Having over 255 benefits
- * Creator and Benefit having different authority?
- *
  */
 
 describe('nft-club', () => {
@@ -142,6 +140,7 @@ describe('nft-club', () => {
       {
         accounts: {
           benefit: benefit.publicKey,
+          creator: creator.publicKey,
           authority: program.provider.wallet.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
@@ -157,7 +156,7 @@ describe('nft-club', () => {
     console.log(benefitAccount);
   });
 
-  it('cannot create a Benefit with description over 420 characters', async () => {
+  it('cannot create a Benefit with description over 421 characters', async () => {
     const creator = anchor.web3.Keypair.generate();
     await program.rpc.createAccount(
       'testUsername',
@@ -186,6 +185,7 @@ describe('nft-club', () => {
         {
           accounts: {
             benefit: benefit.publicKey,
+            creator: creator.publicKey,
             authority: program.provider.wallet.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
@@ -199,10 +199,7 @@ describe('nft-club', () => {
       console.log(benefitAccount);
     }
     catch(error) {
-      console.log("ERRRRRRRRRRRRRRRRRRRRRRR");
-      console.log(error);
-      console.log("ERRRRRRRRRRRRRRRRRRRRRRR");
-      assert.equal(error.msg, "The provided Benefit description should be 421 characters long maximum.");
+      assert.equal(error.msg, "The provided Benefit description should be 420 characters long maximum.");
       return;
     }
 

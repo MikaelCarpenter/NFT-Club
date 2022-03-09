@@ -17,6 +17,7 @@ import {
 } from '@solana/wallet-adapter-wallets';
 
 import Navbar from './Navbar';
+import Landing from './Landing';
 
 require('@solana/wallet-adapter-react-ui/styles.css');
 
@@ -43,8 +44,8 @@ const Layout: FC = (props) => {
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <Navbar />
-
+          {/*<Navbar />*/}
+          <Landing />
           <main>{children}</main>
 
           {/* Footer */}

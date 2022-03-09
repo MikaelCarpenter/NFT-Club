@@ -38,7 +38,10 @@ describe('nft-club', () => {
     );
     console.log('Your transaction signature', tx);
     console.log(creatorAccount);
-    assert.equal(creatorAccount.authority.toBase58(), program.provider.wallet.publicKey.toBase58());
+    assert.equal(
+      creatorAccount.authority.toBase58(),
+      program.provider.wallet.publicKey.toBase58()
+    );
     assert.equal(creatorAccount.username, 'testUsername');
     assert.equal(creatorAccount.email, 'test@email.com');
     assert.equal(creatorAccount.description, 'test description');
@@ -62,53 +65,76 @@ describe('nft-club', () => {
           signers: [creator],
         }
       );
-    }
-    catch(error) {
-      assert.equal(error.msg, 'The provided Creator username should be 42 characters long maximum.');
+    } catch (error) {
+      assert.equal(
+        error.msg,
+        'The provided Creator username should be 42 characters long maximum.'
+      );
       return;
     }
-    assert.fail('The instruction should have failed with a 43-character username');
+    assert.fail(
+      'The instruction should have failed with a 43-character username'
+    );
   });
-
 
   it('cannot provide a Creator with email over 42 characters', async () => {
     try {
       const creator = anchor.web3.Keypair.generate(); // Generate a keypair for accounts (publicKey) and signers
-      await program.rpc.createAccount('testUsername', "x".repeat(43), 'test description', 1, {
-        accounts: {
-          creator: creator.publicKey,
-          authority: program.provider.wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId
-        },
-        signers: [creator]
-      });
-    }
-    catch(error) {
-      assert.equal(error.msg, "The provided Creator email should be 42 characters long maximum.");
+      await program.rpc.createAccount(
+        'testUsername',
+        'x'.repeat(43),
+        'test description',
+        1,
+        {
+          accounts: {
+            creator: creator.publicKey,
+            authority: program.provider.wallet.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+          signers: [creator],
+        }
+      );
+    } catch (error) {
+      assert.equal(
+        error.msg,
+        'The provided Creator email should be 42 characters long maximum.'
+      );
       return;
     }
 
-    assert.fail("The instruction should have failed with a 43-character email.");
+    assert.fail(
+      'The instruction should have failed with a 43-character email.'
+    );
   });
 
   it('cannot provide a Creator with description over 420 characters', async () => {
     try {
       const creator = anchor.web3.Keypair.generate(); // Generate a keypair for accounts (publicKey) and signers
-      await program.rpc.createAccount('testUsername', 'test@email.com', 'x'.repeat(421), 1, {
-        accounts: {
-          creator: creator.publicKey,
-          authority: program.provider.wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId
-        },
-        signers: [creator]
-      });
-    }
-    catch(error) {
-      assert.equal(error.msg, "The provided Creator description should be 420 characters long maximum.");
+      await program.rpc.createAccount(
+        'testUsername',
+        'test@email.com',
+        'x'.repeat(421),
+        1,
+        {
+          accounts: {
+            creator: creator.publicKey,
+            authority: program.provider.wallet.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+          signers: [creator],
+        }
+      );
+    } catch (error) {
+      assert.equal(
+        error.msg,
+        'The provided Creator description should be 420 characters long maximum.'
+      );
       return;
     }
 
-    assert.fail("The instruction should have failed with a 421-character description.");
+    assert.fail(
+      'The instruction should have failed with a 421-character description.'
+    );
   });
 
   /*
@@ -151,7 +177,14 @@ describe('nft-club', () => {
       benefit.publicKey
     );
     console.log('Your transaction signature', benefitTx);
-    assert.equal(benefitAccount.authority.toBase58(), program.provider.wallet.publicKey.toBase58()); assert.equal(benefitAccount.authority.toBase58(), creatorAccount.authority.toBase58());
+    assert.equal(
+      benefitAccount.authority.toBase58(),
+      program.provider.wallet.publicKey.toBase58()
+    );
+    assert.equal(
+      benefitAccount.authority.toBase58(),
+      creatorAccount.authority.toBase58()
+    );
     assert.equal(benefitAccount.description, 'benefit test description');
     console.log(benefitAccount);
   });
@@ -180,29 +213,30 @@ describe('nft-club', () => {
 
     try {
       const benefit = anchor.web3.Keypair.generate();
-      const benefitTx = await program.rpc.createBenefit(
-        'x'.repeat(421),
-        {
-          accounts: {
-            benefit: benefit.publicKey,
-            creator: creator.publicKey,
-            authority: program.provider.wallet.publicKey,
-            systemProgram: anchor.web3.SystemProgram.programId,
-          },
-          signers: [benefit],
-        }
-      );
+      const benefitTx = await program.rpc.createBenefit('x'.repeat(421), {
+        accounts: {
+          benefit: benefit.publicKey,
+          creator: creator.publicKey,
+          authority: program.provider.wallet.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        },
+        signers: [benefit],
+      });
       const benefitAccount = await program.account.benefit.fetch(
         benefit.publicKey
       );
       console.log('Your transaction signature', benefitTx);
       console.log(benefitAccount);
-    }
-    catch(error) {
-      assert.equal(error.msg, "The provided Benefit description should be 420 characters long maximum.");
+    } catch (error) {
+      assert.equal(
+        error.msg,
+        'The provided Benefit description should be 420 characters long maximum.'
+      );
       return;
     }
 
-    assert.fail("The instruction should have failed with a 421-character benefit description.");
+    assert.fail(
+      'The instruction should have failed with a 421-character benefit description.'
+    );
   });
 });

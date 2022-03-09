@@ -5,8 +5,13 @@ const tailwindConfig = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Playfair Display Semibold']
+      },
       colors: {
-        primary: '#F36D9B',
+        'text-primary': '#374050',
+        'bg-primary': '#F26C9B',
+        'title': '#661181',
       },
     },
   },

@@ -25,3 +25,11 @@ a {
 * {
   box-sizing: border-box;
 }
+
+.wallet-adapter-button {
+  border-radius: .75rem;
+}
+
+button:hover {
+  background-color: #374050 !important;
+}

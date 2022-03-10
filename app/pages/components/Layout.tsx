@@ -16,9 +16,6 @@ import {
   TorusWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
 
-import Landing from './Landing';
-import SignUp from './SignUp';
-
 require('@solana/wallet-adapter-react-ui/styles.css');
 
 const network = WalletAdapterNetwork.Devnet;
@@ -44,8 +41,7 @@ const Layout: FC = (props) => {
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <Landing />
-          <main>{children}</main>
+          <main className="h-full">{children}</main>
 
           {/* Footer */}
         </WalletModalProvider>

@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::*;
+use anchor_spl::token::{Token, Transfer};
 
 // 
 // Endpoints
@@ -7,13 +8,25 @@ use crate::*;
 pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
     let subscription: &mut Account<Subscription> = &mut ctx.accounts.subscription;
     let user: &Signer = &ctx.accounts.user;
+    let creator: &Account<Creator> = &ctx.accounts.creator;
     let benefit: &Account<Benefit> = &ctx.accounts.benefit;
-    let clock: Clock = Clock::get().unwrap();
 
-    // Todo: Here we need to add logic to check the following
-    // 1. If the user doesn't have a subscription, then return.
-    // 2. If the user has the subscription, and it hasn't expired return,
-    // 3. If the user has the subscription, and it has expired, then update.
+    let clock: Clock = Clock::get().unwrap();
+    
+    let amount_to_pay: u64 = benefit.cost_per_month;
+
+    // Transfer the amount from user to the creator
+    anchor_spl::token::transfer(
+        CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: user.to_account_info(),
+                to: creator.to_account_info(),
+                authority: user.to_account_info()
+            }
+        ),
+        amount_to_pay
+    )?;
 
     subscription.user = *user.key;
     subscription.benefit = benefit.key();
@@ -25,10 +38,14 @@ pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
 
 // 
 // Data Validators
-// 
+//
+
+// Create a new subcription
 #[derive(Accounts)]
 pub struct CreateSubscription<'info> {
     // Create account of type Subscription and assign creator's pubkey as the payer
+    // This also makes sure that we have only one subscription for the following combination:
+    // benefitPubKey + userPubKey + "subscription"
     #[account(init, seeds = [benefit.key().as_ref(), user.key().as_ref(), b"subscription".as_ref()], bump, payer = user, space = Subscription::LEN)]
     pub subscription: Account<'info, Subscription>,
 
@@ -36,11 +53,17 @@ pub struct CreateSubscription<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
+    // Creator of the benefit
+    #[account(mut)]
+    pub creator: Account<'info, Creator>,
+
     // The benefit to which user wants to subscribe to
     pub benefit: Account<'info, Benefit>,
 
     // Ensure System Program is the official one from Solana
     pub system_program: Program<'info, System>,
+
+    pub token_program: Program<'info, Token>,
 }
 
 #[account]

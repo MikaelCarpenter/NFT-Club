@@ -28,6 +28,8 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, name: String, cost_per_month:
 #[instruction(name: String, description: String)]
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
+    // This also makes sure that we have only one benefit for the following combination
+    // creatorPubKey + name of benefit + "benefit".
     #[account(init, seeds = [creator.key().as_ref(), name.as_ref(), b"benefit".as_ref()], bump, payer = authority, space = Benefit::LEN)]
     pub benefit: Account<'info, Benefit>,
 
@@ -43,7 +45,7 @@ pub struct CreateBenefit<'info> {
     pub authority: Signer<'info>,
 
     // Ensure System Program is the official one from Solana and handle errors
-    #[account(constraint = description.chars().count() <= 420 @ creator::ErrorCode::BenefitDescriptionTooLong)]
+    #[account(constraint = description.chars().count() <= 420 @ errors::ErrorCode::BenefitDescriptionTooLong)]
     pub system_program: Program<'info, System>,
 }
 

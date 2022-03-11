@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use crate::*;
 
 // 
 // Endpoints
@@ -34,9 +35,9 @@ pub struct CreateAccount<'info> {
     pub authority: Signer<'info>,
 
     // Ensure System Program is the official one from Solana and handle errors
-    #[account(constraint = username.chars().count() <= 42 @ ErrorCode::UsernameTooLong)]
-    #[account(constraint = email.chars().count() <= 42 @ ErrorCode::EmailTooLong)]
-    #[account(constraint = description.chars().count() <= 420 @ ErrorCode::DescriptionTooLong)]
+    #[account(constraint = username.chars().count() <= 42 @ errors::ErrorCode::UsernameTooLong)]
+    #[account(constraint = email.chars().count() <= 42 @ errors::ErrorCode::EmailTooLong)]
+    #[account(constraint = description.chars().count() <= 420 @ errors::ErrorCode::DescriptionTooLong)]
     pub system_program: Program<'info, System>,
 }
 
@@ -69,19 +70,4 @@ impl Creator {
         + STRING_LENGTH_PREFIX + EMAIL_LENGTH
         + STRING_LENGTH_PREFIX + DESCRIPTION_LENGTH
         + NUM_BENEFITS_LENGTH;
-}
-
-// 
-// Events
-// 
-#[error_code]
-pub enum ErrorCode {
-    #[msg("The provided Creator username should be 42 characters long maximum.")]
-    UsernameTooLong,
-    #[msg("The provided Creator email should be 42 characters long maximum.")]
-    EmailTooLong,
-    #[msg("The provided Creator description should be 420 characters long maximum.")]
-    DescriptionTooLong,
-    #[msg("The provided Benefit description should be 420 characters long maximum.")]
-    BenefitDescriptionTooLong,
 }

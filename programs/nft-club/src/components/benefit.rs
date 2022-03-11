@@ -4,7 +4,7 @@ use crate::*;
 // 
 // Endpoints
 // 
-pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Result<()> {
+pub fn create_benefit(ctx: Context<CreateBenefit>, name: String, cost_per_month: u64, description: String) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
     let authority: &Signer = &ctx.accounts.authority;
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
@@ -13,7 +13,10 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Resul
     creator.num_benefits = creator.num_benefits.checked_add(1).unwrap();
 
     benefit.authority = *authority.key;
+    benefit.name = name;
+    benefit.cost_per_month = cost_per_month;
     benefit.description = description;
+    benefit.bump = *ctx.bumps.get("benefit").unwrap();
 
     Ok(())
 }
@@ -22,10 +25,10 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Resul
 // Data Validators
 // 
 #[derive(Accounts)]
-#[instruction(description: String)]
+#[instruction(name: String, description: String)]
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
-    #[account(init, payer = authority, space = Benefit::LEN)]
+    #[account(init, seeds = [creator.key().as_ref(), name.as_ref(), b"benefit".as_ref()], bump, payer = authority, space = Benefit::LEN)]
     pub benefit: Account<'info, Benefit>,
 
     // Guarantee that account is both signed by authority
@@ -47,7 +50,10 @@ pub struct CreateBenefit<'info> {
 #[account]
 pub struct Benefit {
     pub authority: Pubkey,
+    pub name: String,
+    pub cost_per_month: u64,
     pub description: String,
+    pub bump: u8,
 }
 
 /*
@@ -71,11 +77,16 @@ pub struct Benefit {
 const DISCRIMINATOR_LENGTH: usize = 8;
 const PUBKEY_LENGTH: usize = 32;
 const STRING_LENGTH_PREFIX: usize = 4;
+const NAME_LENGTH: usize = 100 * 4;
 const DESCRIPTION_LENGTH: usize = 420 * 4;
-
+const BUMP_LENGTH: usize = 1;
+const COST_PER_MONTH_LENGTH: usize = 8;
 
 impl Benefit {
     const LEN: usize = DISCRIMINATOR_LENGTH
-        + PUBKEY_LENGTH
-        + STRING_LENGTH_PREFIX + DESCRIPTION_LENGTH;
+        + PUBKEY_LENGTH 
+        + STRING_LENGTH_PREFIX + NAME_LENGTH
+        + COST_PER_MONTH_LENGTH
+        + STRING_LENGTH_PREFIX + DESCRIPTION_LENGTH
+        + BUMP_LENGTH;
 }

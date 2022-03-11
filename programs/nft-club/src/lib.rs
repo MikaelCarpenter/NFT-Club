@@ -23,4 +23,8 @@ pub mod nft_club {
     pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
         components::create_subscription(ctx)
     }
+
+    pub fn update_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
+        components::update_subscription(ctx)
+    }
 }

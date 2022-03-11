@@ -18,4 +18,8 @@ pub mod nft_club {
     pub fn create_benefit(ctx: Context<CreateBenefit>, name: String, cost_per_month: u64, description: String) -> Result<()> {
         components::create_benefit(ctx, name, cost_per_month, description)
     }
+
+    pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
+        components::create_subscription(ctx)
+    }
 }

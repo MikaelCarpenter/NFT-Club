@@ -22,12 +22,6 @@ const tailwindConfig = {
             h1: {
               fontSize: '2.75em',
             },
-            // a: {
-            //   color: '#3182ce',
-            //   '&:hover': {
-            //     color: '#2c5282',
-            //   },
-            // },
           },
         },
       },

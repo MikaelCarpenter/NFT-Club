@@ -26,8 +26,3 @@ a {
 * {
   box-sizing: border-box;
 }
-
-/* Intentionally breaking the wallet-adapter-button styles in favor of our theme */
-.wallet-adapter-button:not([disabled]):hover {
-  background-color: broken;
-}

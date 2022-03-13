@@ -28,8 +28,6 @@ const Home: NextPage = () => {
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [creator, setCreator] = useState<ProgramAccount | null>(null);
-  console.log('connectedWallet', connectedWallet);
-  console.log('creator', creator);
 
   const program = useMemo(() => {
     if (connectedWallet) {

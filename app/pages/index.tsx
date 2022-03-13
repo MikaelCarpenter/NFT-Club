@@ -24,6 +24,7 @@ import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 
 const Home: NextPage = () => {
   const connectedWallet = useAnchorWallet();
+  console.log('connectedWallet', connectedWallet);
 
   // const [isLoading, setIsLoading] = useState<boolean>(false);
   // const [counter, setCounter] = useState<ProgramAccount | null>(null);
@@ -67,19 +68,19 @@ const Home: NextPage = () => {
   // }, [connectedWallet, program]);
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="flex h-full bg-white text-text-primary">
-        <div className="flex items-center justify-center w-1/2 text-7xl">
-          <h1 className="p-12 font-sans text-center">
+    <div className="flex flex-col items-center justify-center h-screen">
+      <div className="flex">
+        <div className="prose flex flex-1 items-center justify-center">
+          <h1 className="text-center">
             Welcome
             <br />
-            to <span className="text-title">NFT
+            to <span className="text-primary">NFT
             <br />
-            Club.</span>
+            Club</span>
           </h1>
         </div>
-        <div className="flex items-center justify-center w-1/2">
-          <p className="w-3/4 text-center">
+        <div className="prose flex flex-1 items-center justify-center">
+          <p className="text-center p-8">
             Here's a big mass of text. Cool... Here's a big mass of text.
             Cool...Here's a big mass of text. Cool...Here's a big mass of text.
             Cool...Here's a big mass of text. Cool... Here's a big mass of text.
@@ -95,9 +96,7 @@ const Home: NextPage = () => {
           </p>
         </div>
       </div>
-      <div className="fixed rounded-xl top-3/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-bg-primary">
-        <WalletMultiButton />
-      </div>
+      <WalletMultiButton className="btn-primary" />
     </div>
   );
 };

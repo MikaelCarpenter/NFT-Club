@@ -27,10 +27,7 @@ a {
   box-sizing: border-box;
 }
 
-.wallet-adapter-button {
-  border-radius: .75rem;
-}
-
-.wallet-adapter-button:hover {
-  background-color: #374050 !important;
+/* Intentionally breaking the wallet-adapter-button styles in favor of our theme */
+.wallet-adapter-button:not([disabled]):hover {
+  background-color: broken;
 }

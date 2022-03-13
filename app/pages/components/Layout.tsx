@@ -41,7 +41,7 @@ const Layout: FC = (props) => {
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <main className="h-full">{children}</main>
+          <main data-theme="light" className="h-screen">{children}</main>
 
           {/* Footer */}
         </WalletModalProvider>

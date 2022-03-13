@@ -1,74 +1,97 @@
-import { useState} from 'react';
-
-import BenefitInput from './components/BenefitInput';
-
-type InputDict = { [index: string]: (val: string) => void }
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 const SignUp = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [description, setDescription] = useState('');
-  const [benefits, setBenefits] = useState([]);
+  const usernameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
-  const inputDict: InputDict = {
-    'username': setUsername,
-    'email': setEmail,
-    'description': setDescription
-  };
+  useEffect(() => {
+    usernameRef?.current?.focus();
+  }, [usernameRef]);
 
-  const handleInput = (event: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>, inputField: string) => {
-    inputDict[inputField](event.target.value);
-  }
+  const [benefitRefs, setBenefitRefs] = useState<RefObject<HTMLInputElement>[]>(
+    [{ current: null }]
+  );
 
-  const addBenefitInput = () => {
-    console.log("Adding Benefit Input");
-  }
+  const handleNewBenefit = useCallback(() => {
+    setBenefitRefs((prev) => [...prev, { current: null }]);
+  }, []);
 
-  const createAccount = () => {
-    console.log('Making RPC Call...');
-    console.log(`Creating Account with username: ${username}, email: ${email}, description: ${description}`);
-  }
+  const handleCreateAccount = useCallback(() => {
+    const username = usernameRef?.current?.value;
+    const email = emailRef?.current?.value;
+    const description = descriptionRef?.current?.value;
+
+    const benefits = benefitRefs.map((benefitRef) => {
+      return benefitRef?.current?.value;
+    });
+
+    console.log('username', username);
+    console.log('email', email);
+    console.log('description', description);
+    console.log('benefits', benefits);
+  }, [benefitRefs]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-bg-primary">
-      <h1 className="mt-16 text-4xl">Sign Up</h1>
-      <div className="flex flex-col items-center justify-start w-1/4 h-3/4">
-        <div className="w-full py-8">
-          <input
-            className="w-full px-2 rounded text-text-primary outline-0"
-            placeholder="Username"
-            onChange={(e) => handleInput(e, 'username')}
-          />
-        </div>
-        <div className="w-full py-8">
-          <input
-            className="w-full px-2 rounded text-text-primary outline-0"
-            placeholder="Email"
-            onChange={(e) => handleInput(e, 'email')}
-          />
-        </div>
-        <div className="w-full py-8 h-1/4">
-          <textarea
-            className="w-full h-full px-2 rounded resize-none text-text-primary outline-0"
-            placeholder="Account description"
-            onChange={(e) => handleInput(e, 'description')}
-          />
+    <div className="flex h-full flex-col items-center justify-center">
+      <div className="prose mb-8">
+        <h1>Sign Up</h1>
+      </div>
+      <div className="form-control mb-16 w-full max-w-xs">
+        <label className="label">
+          <span className="label-text">Username</span>
+        </label>
+        <input
+          ref={usernameRef}
+          type="text"
+          placeholder="Jane Doe"
+          className="input input-bordered mb-4 w-full max-w-xs text-black"
+          maxLength={42}
+          autoFocus
+        />
+        <label className="label">
+          <span className="label-text">Email</span>
+        </label>
+        <input
+          ref={emailRef}
+          type="text"
+          placeholder="jdoe@gmail.com"
+          className="input input-bordered mb-4 w-full max-w-xs text-black"
+          maxLength={42}
+        />
+        <label className="label">
+          <span className="label-text">Description</span>
+        </label>
+        <textarea
+          ref={descriptionRef}
+          className="textarea textarea-bordered mb-4 text-black"
+          placeholder="Is creating..."
+          maxLength={420}
+        />
+
+        <div className="prose mb-4 flex items-center justify-between">
+          <h3>Benefits</h3>
+
+          <button className="btn btn-outline btn-sm" onClick={handleNewBenefit}>
+            +
+          </button>
         </div>
 
-        <BenefitInput />
-        <button
-          className="h-12 p-2 m-4 bg-white rounded-3xl text-text-primary"
-          onClick={() => addBenefitInput()}
-        >
-          Add Benefit
+        {benefitRefs.map((benefitRef, index) => (
+          <input
+            key={`benefit-${index}`}
+            ref={benefitRef}
+            type="text"
+            placeholder="Benefit description"
+            className="input input-bordered mb-4 w-full max-w-xs text-black"
+            maxLength={420}
+          />
+        ))}
+
+        <button className="btn btn-primary mt-8" onClick={handleCreateAccount}>
+          Create Account
         </button>
       </div>
-      <button
-        className="h-12 p-2 m-4 bg-white rounded-3xl text-text-primary"
-        onClick={() => createAccount()}
-      >
-        Create Account
-      </button>
     </div>
   );
 };

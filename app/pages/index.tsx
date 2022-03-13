@@ -1,8 +1,9 @@
 import * as anchor from '@project-serum/anchor';
 import { NextPage } from 'next';
+import { useRouter } from 'next/router';
 import { ConfirmOptions } from '@solana/web3.js';
-import { useEffect, useMemo, useState } from 'react';
 import { ProgramAccount } from '@project-serum/anchor';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 
@@ -22,7 +23,9 @@ const connection = new anchor.web3.Connection(
 );
 
 const Home: NextPage = () => {
+  const router = useRouter();
   const connectedWallet = useAnchorWallet();
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [creator, setCreator] = useState<ProgramAccount | null>(null);
   console.log('connectedWallet', connectedWallet);
@@ -66,36 +69,44 @@ const Home: NextPage = () => {
     }
   }, [connectedWallet, program]);
 
+  const handleBecomeCreator = useCallback(() => {
+    router.push('/sign-up')
+  }, [router])
+
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <div className="flex">
-        <div className="prose flex flex-1 items-center justify-center">
-          <h1 className="text-center">
-            Welcome
-            <br />
-            to <span className="text-primary">NFT
-            <br />
-            Club</span>
-          </h1>
+    <div className="flex items-center justify-center h-full">
+      <div className='flex flex-col items-center mb-16'>
+        <div className="flex">
+          <div className="prose flex flex-1 items-center justify-center">
+            <h1 className="text-center">
+              Welcome
+              <br />
+              to <span className="text-primary">NFT
+              <br />
+              Club</span>
+            </h1>
+          </div>
+          <div className="prose flex flex-1 items-center justify-center">
+            <p className="text-center p-8">
+              Here's a big mass of text. Cool... Here's a big mass of text.
+              Cool...Here's a big mass of text. Cool...Here's a big mass of text.
+              Cool...Here's a big mass of text. Cool... Here's a big mass of text.
+              <br />
+              <br />
+              We're gonna talk about how sick our product is. And you're all gonna love it.
+            </p>
+          </div>
         </div>
-        <div className="prose flex flex-1 items-center justify-center">
-          <p className="text-center p-8">
-            Here's a big mass of text. Cool... Here's a big mass of text.
-            Cool...Here's a big mass of text. Cool...Here's a big mass of text.
-            Cool...Here's a big mass of text. Cool... Here's a big mass of text.
-            <br />
-            <br />
-            We're gonna talk about how sick our product is. And you're all gonna love it.
-            <br />
-            <br />
-            Cool...Here's a big mass of text. Cool...Here's a big mass of text.
-            Cool...Here's a big mass of text. Cool...Here's a big mass of text.
-            Cool...Here's a big mass of text. Cool...Here's a big mass of text.
-            Cool...
-          </p>
-        </div>
+        {!connectedWallet ? (
+          <WalletMultiButton className="btn btn-primary" />
+        ) : creator ? (
+          <p>CREATOR FOUND</p>
+        ) : (
+          <button className='btn btn-primary' onClick={handleBecomeCreator}>
+            Become a Creator
+          </button>
+        )}
       </div>
-      <WalletMultiButton className="btn-primary" />
     </div>
   );
 };

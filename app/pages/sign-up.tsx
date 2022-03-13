@@ -1,5 +1,8 @@
 import { useState} from 'react';
-import BenefitInput from './BenefitInput';
+
+import BenefitInput from './components/BenefitInput';
+
+type InputDict = { [index: string]: (val: string) => void }
 
 const SignUp = () => {
   const [username, setUsername] = useState('');
@@ -7,7 +10,6 @@ const SignUp = () => {
   const [description, setDescription] = useState('');
   const [benefits, setBenefits] = useState([]);
 
-  type InputDict = { [index: string]: Function }
   const inputDict: InputDict = {
     'username': setUsername,
     'email': setEmail,

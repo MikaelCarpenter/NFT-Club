@@ -5,7 +5,7 @@ pub mod components;
 
 use components::*;
 
-declare_id!("GZsTnQNL9b2mYSdFhY6iNHKR1M5Ect4hTp5k8ZmyUyHX");
+declare_id!("6dND1tHXuvCzB9Fe88FvnrZEqTVraPWGxtR5HQs4Z3dx");
 
 #[program]
 pub mod nft_club {

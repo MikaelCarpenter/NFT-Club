@@ -1,102 +1,109 @@
 import * as anchor from '@project-serum/anchor';
-import { Wallet } from '@project-serum/anchor';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { NextPage } from 'next';
+import { useRouter } from 'next/router';
 import { ConfirmOptions } from '@solana/web3.js';
 import { ProgramAccount } from '@project-serum/anchor';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 
-// import IDL from '../../target/idl/counter.json';
+import IDL from '../../target/idl/nft_club.json';
 
-// const PROGRAM_ID = new anchor.web3.PublicKey(
-//   '7GrrqwT8xcSSM77QsnE4eTqxkBniNTsyKafTjeV6hiba'
-// );
+const PROGRAM_ID = new anchor.web3.PublicKey(
+  '6dND1tHXuvCzB9Fe88FvnrZEqTVraPWGxtR5HQs4Z3dx'
+);
+const OPTS = {
+  preflightCommitment: 'processed',
+} as ConfirmOptions;
 
-// const OPTS = {
-//   preflightCommitment: 'processed',
-// } as ConfirmOptions;
-// const endpoint = 'https://api.devnet.solana.com';
-// const connection = new anchor.web3.Connection(
-//   endpoint,
-//   OPTS.preflightCommitment
-// );
+const endpoint = 'https://api.devnet.solana.com';
+const connection = new anchor.web3.Connection(
+  endpoint,
+  OPTS.preflightCommitment
+);
 
 const Home: NextPage = () => {
+  const router = useRouter();
   const connectedWallet = useAnchorWallet();
 
-  // const [isLoading, setIsLoading] = useState<boolean>(false);
-  // const [counter, setCounter] = useState<ProgramAccount | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [creator, setCreator] = useState<ProgramAccount | null>(null);
 
-  // const program = useMemo(() => {
-  //   if (connectedWallet) {
-  //     const provider = new anchor.Provider(
-  //       connection,
-  //       connectedWallet as anchor.Wallet,
-  //       OPTS
-  //     );
+  const program = useMemo(() => {
+    if (connectedWallet) {
+      const provider = new anchor.Provider(
+        connection,
+        connectedWallet,
+        OPTS
+      );
 
-  //     return new anchor.Program(IDL as anchor.Idl, PROGRAM_ID, provider);
-  //   }
+      return new anchor.Program(IDL as anchor.Idl, PROGRAM_ID, provider);
+    }
 
-  //   return null;
-  // }, [connectedWallet]);
+    return null;
+  }, [connectedWallet]);
 
-  // const getCounterForUserWallet = async (
-  //   counterProgram: anchor.Program,
-  //   wallet: AnchorWallet
-  // ) => {
-  //   const [counter] = await counterProgram.account.counter.all([
-  //     {
-  //       memcmp: {
-  //         offset: 8, // Discriminator.
-  //         bytes: wallet.publicKey.toBase58(),
-  //       },
-  //     },
-  //   ]);
+  const getCreatorAccountForUserWallet = async (
+    nftClubProgram: anchor.Program,
+    wallet: AnchorWallet
+  ) => {
+    const [creator] = await nftClubProgram.account.creator.all([
+      {
+        memcmp: {
+          offset: 8, // Discriminator.
+          bytes: wallet.publicKey.toBase58(),
+        },
+      },
+    ]);
 
-  //   if (counter) setCounter(counter);
-  //   setIsLoading(false);
-  // };
+    if (creator) setCreator(creator);
+    setIsLoading(false);
+  };
 
-  // useEffect(() => {
-  //   if (connectedWallet && program) {
-  //     setIsLoading(true);
-  //     getCounterForUserWallet(program, connectedWallet);
-  //   }
-  // }, [connectedWallet, program]);
+  useEffect(() => {
+    if (connectedWallet && program) {
+      setIsLoading(true);
+      getCreatorAccountForUserWallet(program, connectedWallet);
+    }
+  }, [connectedWallet, program]);
+
+  const handleBecomeCreator = useCallback(() => {
+    router.push('/sign-up')
+  }, [router])
 
   return (
     <div className="flex items-center justify-center h-full">
-      <div className="flex h-full bg-white text-text-primary">
-        <div className="flex items-center justify-center w-1/2 text-7xl">
-          <h1 className="p-12 font-sans text-center">
-            Welcome
-            <br />
-            to <span className="text-title">NFT
-            <br />
-            Club.</span>
-          </h1>
+      <div className='flex flex-col items-center mb-16'>
+        <div className="flex">
+          <div className="prose flex flex-1 items-center justify-center">
+            <h1 className="text-center">
+              Welcome
+              <br />
+              to <span className="text-primary">NFT
+              <br />
+              Club</span>
+            </h1>
+          </div>
+          <div className="prose flex flex-1 items-center justify-center">
+            <p className="text-center p-8">
+              Here's a big mass of text. Cool... Here's a big mass of text.
+              Cool...Here's a big mass of text. Cool...Here's a big mass of text.
+              Cool...Here's a big mass of text. Cool... Here's a big mass of text.
+              <br />
+              <br />
+              We're gonna talk about how sick our product is. And you're all gonna love it.
+            </p>
+          </div>
         </div>
-        <div className="flex items-center justify-center w-1/2">
-          <p className="w-3/4 text-center">
-            Here's a big mass of text. Cool... Here's a big mass of text.
-            Cool...Here's a big mass of text. Cool...Here's a big mass of text.
-            Cool...Here's a big mass of text. Cool... Here's a big mass of text.
-            <br />
-            <br />
-            We're gonna talk about how sick our product is. And you're all gonna love it.
-            <br />
-            <br />
-            Cool...Here's a big mass of text. Cool...Here's a big mass of text.
-            Cool...Here's a big mass of text. Cool...Here's a big mass of text.
-            Cool...Here's a big mass of text. Cool...Here's a big mass of text.
-            Cool...
-          </p>
-        </div>
-      </div>
-      <div className="fixed rounded-xl top-3/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-bg-primary">
-        <WalletMultiButton />
+        {!connectedWallet ? (
+          <WalletMultiButton className="btn btn-primary" />
+        ) : creator ? (
+          <p>CREATOR FOUND</p>
+        ) : (
+          <button className='btn btn-primary' onClick={handleBecomeCreator}>
+            Become a Creator
+          </button>
+        )}
       </div>
     </div>
   );

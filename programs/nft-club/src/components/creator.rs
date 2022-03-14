@@ -4,7 +4,13 @@ use crate::*;
 // 
 // Endpoints
 // 
-pub fn create_account(ctx: Context<CreateAccount>, username: String, email: String, description: String, num_benefits: u8) -> Result<()> {
+pub fn create_account(
+    ctx: Context<CreateAccount>, 
+    username: String, 
+    email: String, 
+    description: String, 
+    num_benefits: u8
+) -> Result<()> {
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
     let authority: &Signer = &ctx.accounts.authority;
     msg!("username: {}", username);

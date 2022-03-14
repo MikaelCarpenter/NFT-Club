@@ -4,7 +4,7 @@ use crate::*;
 // 
 // Endpoints
 // 
-pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Result<()> {
+pub fn create_benefit(ctx: Context<CreateBenefit>, description: String, _benefit_number: String) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
     let authority: &Signer = &ctx.accounts.authority;
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
@@ -14,6 +14,7 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Resul
 
     benefit.authority = *authority.key;
     benefit.description = description;
+    benefit.bump = *ctx.bumps.get("benefit").unwrap();
 
     Ok(())
 }
@@ -22,10 +23,10 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Resul
 // Data Validators
 // 
 #[derive(Accounts)]
-#[instruction(description: String)]
+#[instruction(description: String, benefit_number: String)]
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
-    #[account(init, payer = authority, space = Benefit::LEN)]
+    #[account(init, seeds=[creator.key().as_ref(), b"benefit", benefit_number.as_bytes()], bump, payer = authority, space = Benefit::LEN)]
     pub benefit: Account<'info, Benefit>,
 
     // Guarantee that account is both signed by authority
@@ -48,6 +49,7 @@ pub struct CreateBenefit<'info> {
 pub struct Benefit {
     pub authority: Pubkey,
     pub description: String,
+    pub bump: u8,
 }
 
 /*

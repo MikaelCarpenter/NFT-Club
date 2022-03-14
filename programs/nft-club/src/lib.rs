@@ -15,7 +15,7 @@ pub mod nft_club {
         //catch error
     }
 
-    pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Result<()> {
-        components::create_benefit(ctx, description)
+    pub fn create_benefit(ctx: Context<CreateBenefit>, description: String, benefit_number: String) -> Result<()> {
+        components::create_benefit(ctx, description, benefit_number)
     }
 }

@@ -26,10 +26,13 @@ const SignUp = () => {
       return benefitRef?.current?.value;
     });
 
+    const numBenefits = benefits.length;
+
     console.log('username', username);
     console.log('email', email);
     console.log('description', description);
     console.log('benefits', benefits);
+    console.log('numBenefits', numBenefits);
   }, [benefitRefs]);
 
   return (

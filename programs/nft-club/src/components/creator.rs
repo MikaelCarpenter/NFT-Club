@@ -15,6 +15,7 @@ pub fn create_account(ctx: Context<CreateAccount>, username: String, email: Stri
     creator.email = email;
     creator.description = description;
     creator.num_benefits = num_benefits;
+    creator.bump = *ctx.bumps.get("creator").unwrap();
 
     Ok(())
 }
@@ -26,7 +27,7 @@ pub fn create_account(ctx: Context<CreateAccount>, username: String, email: Stri
 #[instruction(username: String, email: String, description: String)]
 pub struct CreateAccount<'info> {
     // Create account of type Creator and assign creators's pubkey as the payer
-    #[account(init, payer = authority, space = Creator::LEN)]
+    #[account(init, seeds=[authority.key().as_ref(), b"creator"], bump, payer = authority, space = Creator::LEN)]
     pub creator: Account<'info, Creator>,
 
     // Define user as mutable - money in their account, profile data, etc.
@@ -50,6 +51,7 @@ pub struct Creator {
     pub email: String,
     pub description: String,
     pub num_benefits: u8,
+    pub bump: u8,
 }
 
 // Constants for sizing properties

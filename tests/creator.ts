@@ -56,7 +56,7 @@ describe('Creator', () => {
     });
   });
 
-  describe('contraints', () => {
+  describe('constraints', () => {
     // defining once, because all of these requests should fail
     // so we won't have to worry about duplicates
     const creatorsWalletKeypair = anchor.web3.Keypair.generate();

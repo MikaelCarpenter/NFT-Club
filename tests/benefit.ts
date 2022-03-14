@@ -61,6 +61,7 @@ describe('Benefit', () => {
 
       txn.add(
         program.instruction.createBenefit(
+          'Benefit name',
           'benefit test description',
           benefitNumber,
           {
@@ -144,7 +145,7 @@ describe('Benefit', () => {
       );
 
       txn.add(
-        program.instruction.createBenefit('x'.repeat(421), benefitNumber, {
+        program.instruction.createBenefit('Benefit name', 'x'.repeat(421), benefitNumber, {
           accounts: {
             benefit: benefitPubKey,
             creator: creatorPubKey,

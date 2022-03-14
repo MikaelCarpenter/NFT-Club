@@ -4,7 +4,12 @@ use crate::*;
 // 
 // Endpoints
 // 
-pub fn create_benefit(ctx: Context<CreateBenefit>, name: String, description: String) -> Result<()> {
+pub fn create_benefit(
+    ctx: Context<CreateBenefit>, 
+    name: String, 
+    description: String, 
+    _benefit_number: String
+) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
     let authority: &Signer = &ctx.accounts.authority;
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
@@ -24,14 +29,14 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, name: String, description: St
 // Data Validators
 // 
 #[derive(Accounts)]
-#[instruction(name: String, description: String)]
+#[instruction(name: String, description: String, benefit_number: String)]
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
     // This also makes sure that we have only one benefit for the following combination
     #[account(
         init, 
-        // seeded creatorPubKey + name of benefit + "benefit".
-        seeds = [creator.key().as_ref(), name.as_ref(), b"benefit".as_ref()], 
+        // seeded with creatorPubKey + benefit_number + "benefit".
+        seeds = [creator.key().as_ref(), b"benefit", benefit_number.as_ref()], 
         bump, 
         payer = authority, 
         space = Benefit::LEN
@@ -51,6 +56,11 @@ pub struct CreateBenefit<'info> {
 
     // Ensure System Program is the official one from Solana and handle errors
     #[account(constraint = description.chars().count() <= 420 @ errors::ErrorCode::BenefitDescriptionTooLong)]
+    // Ensure benefit_number == num_benefits + 1
+    #[account(
+        constraint = benefit_number.parse::<u8>().unwrap() == creator.num_benefits + 1 
+        @ errors::ErrorCode::BenefitNumberInvalid
+    )]
     pub system_program: Program<'info, System>,
 }
 

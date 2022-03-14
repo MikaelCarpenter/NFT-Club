@@ -1,5 +1,4 @@
 use crate::*;
-use anchor_lang::prelude::*;
 
 //
 // Endpoints
@@ -9,7 +8,6 @@ pub fn create_account(
     username: String,
     email: String,
     description: String,
-    num_benefits: u8,
 ) -> Result<()> {
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
     let authority: &Signer = &ctx.accounts.authority;
@@ -21,7 +19,8 @@ pub fn create_account(
     creator.username = username;
     creator.email = email;
     creator.description = description;
-    creator.num_benefits = num_benefits;
+    creator.num_benefits = 0;
+    creator.bump = *ctx.bumps.get("creator").unwrap();
 
     creator.bump = *ctx.bumps.get("creator").unwrap();
 

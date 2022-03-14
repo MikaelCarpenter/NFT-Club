@@ -31,11 +31,7 @@ const Home: NextPage = () => {
 
   const program = useMemo(() => {
     if (connectedWallet) {
-      const provider = new anchor.Provider(
-        connection,
-        connectedWallet,
-        OPTS
-      );
+      const provider = new anchor.Provider(connection, connectedWallet, OPTS);
 
       return new anchor.Program(IDL as anchor.Idl, PROGRAM_ID, provider);
     }
@@ -68,30 +64,35 @@ const Home: NextPage = () => {
   }, [connectedWallet, program]);
 
   const handleBecomeCreator = useCallback(() => {
-    router.push('/sign-up')
-  }, [router])
+    router.push('/sign-up');
+  }, [router]);
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className='flex flex-col items-center mb-16'>
+    <div className="flex h-full items-center justify-center">
+      <div className="mb-16 flex flex-col items-center">
         <div className="flex">
           <div className="prose flex flex-1 items-center justify-center">
             <h1 className="text-center">
               Welcome
               <br />
-              to <span className="text-primary">NFT
-              <br />
-              Club</span>
+              to{' '}
+              <span className="text-primary">
+                NFT
+                <br />
+                Club
+              </span>
             </h1>
           </div>
           <div className="prose flex flex-1 items-center justify-center">
-            <p className="text-center p-8">
+            <p className="p-8 text-center">
               Here's a big mass of text. Cool... Here's a big mass of text.
-              Cool...Here's a big mass of text. Cool...Here's a big mass of text.
-              Cool...Here's a big mass of text. Cool... Here's a big mass of text.
+              Cool...Here's a big mass of text. Cool...Here's a big mass of
+              text. Cool...Here's a big mass of text. Cool... Here's a big mass
+              of text.
               <br />
               <br />
-              We're gonna talk about how sick our product is. And you're all gonna love it.
+              We're gonna talk about how sick our product is. And you're all
+              gonna love it.
             </p>
           </div>
         </div>
@@ -100,7 +101,7 @@ const Home: NextPage = () => {
         ) : creator ? (
           <p>CREATOR FOUND</p>
         ) : (
-          <button className='btn btn-primary' onClick={handleBecomeCreator}>
+          <button className="btn btn-primary" onClick={handleBecomeCreator}>
             Become a Creator
           </button>
         )}

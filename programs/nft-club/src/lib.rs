@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
-pub mod errors;
 pub mod components;
+pub mod errors;
 // pub mod utils;
 
 use components::*;
@@ -13,18 +13,22 @@ pub mod nft_club {
     use super::*;
 
     pub fn create_account(
-        ctx: Context<CreateAccount>, 
-        username: String, 
-        email: String, 
+        ctx: Context<CreateAccount>,
+        username: String,
+        email: String,
         description: String,
-        num_benefits: u8
     ) -> Result<()> {
-        components::create_account(ctx, username, email, description, num_benefits)
+        components::create_account(ctx, username, email, description)
         //catch error
     }
 
-    pub fn create_benefit(ctx: Context<CreateBenefit>, name: String, description: String) -> Result<()> {
-        components::create_benefit(ctx, name, description)
+    pub fn create_benefit(
+        ctx: Context<CreateBenefit>,
+        name: String,
+        description: String,
+        benefit_number: String,
+    ) -> Result<()> {
+        components::create_benefit(ctx, name, description, benefit_number)
     }
 
     pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {

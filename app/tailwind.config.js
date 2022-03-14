@@ -22,6 +22,9 @@ const tailwindConfig = {
             h1: {
               fontSize: '2.75em',
             },
+            h3: {
+              margin: 0,
+            }
           },
         },
       },

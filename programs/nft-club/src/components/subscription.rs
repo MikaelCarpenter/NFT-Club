@@ -74,9 +74,9 @@ pub fn update_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
 pub struct CreateSubscription<'info> {
     // Create account of type Subscription and assign creator's pubkey as the payer
     // This also makes sure that we have only one subscription for the following combination:
-    // creatorPubKey + userPubKey + "subscription"
     #[account(
         init, 
+        // seeded with creatorPubKey + userPubKey + "subscription"
         seeds = [creator.key().as_ref(), user.key().as_ref(), b"subscription".as_ref()], 
         bump, 
         payer = user, 

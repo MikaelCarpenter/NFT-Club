@@ -28,9 +28,9 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, name: String, description: St
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
     // This also makes sure that we have only one benefit for the following combination
-    // creatorPubKey + name of benefit + "benefit".
     #[account(
         init, 
+        // seeded creatorPubKey + name of benefit + "benefit".
         seeds = [creator.key().as_ref(), name.as_ref(), b"benefit".as_ref()], 
         bump, 
         payer = authority, 

@@ -1,21 +1,32 @@
 const tailwindConfig = {
+  plugins: [require('@tailwindcss/typography'), require('daisyui')],
   content: [
     './pages/**/*.{js,ts,jsx,tsx}',
     './components/**/*.{js,ts,jsx,tsx}',
   ],
+  daisyui: {
+    styled: true,
+    themes: ['light', 'dark'],
+    base: true,
+    utils: true,
+    logs: true,
+    rtl: false,
+    prefix: "",
+    darkTheme: "dark",
+  },
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['Playfair Display Semibold']
-      },
-      colors: {
-        'text-primary': '#374050',
-        'bg-primary': '#F26C9B',
-        'title': '#661181',
+      typography: {
+        DEFAULT: {
+          css: {
+            h1: {
+              fontSize: '2.75em',
+            },
+          },
+        },
       },
     },
   },
-  plugins: [require('daisyui')],
 };
 
 module.exports = tailwindConfig;

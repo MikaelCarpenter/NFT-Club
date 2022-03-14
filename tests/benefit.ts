@@ -92,48 +92,82 @@ describe('Benefit', () => {
     });
   });
 
-  // describe('constraints', () => {
-  //   it('cannot create a Benefit with description over 420 characters', async () => {
-  //     const creator = anchor.web3.Keypair.generate();
-  //     const benefitNumber = anchor.utils.bytes.utf8.encode('1');
-  //     await program.rpc.createAccount(
-  //       'testUsername',
-  //       'test@email.com',
-  //       'test description',
-  //       1,
-  //       {
-  //         accounts: {
-  //           creator: creator.publicKey,
-  //           authority: program.provider.wallet.publicKey,
-  //           systemProgram: anchor.web3.SystemProgram.programId,
-  //         },
-  //         signers: [creator],
-  //       }
-  //     );
+  describe('constraints', () => {
+    it('cannot create a Benefit with description over 420 characters', async () => {
+      const creatorsWalletKeypair = anchor.web3.Keypair.generate();
+      const signature = await program.provider.connection.requestAirdrop(
+        creatorsWalletKeypair.publicKey,
+        1000000000 // 1 SOL — or 1 billion lamports
+      );
+      await program.provider.connection.confirmTransaction(signature);
 
-  //     try {
-  //       const benefit = anchor.web3.Keypair.generate();
+      const creatorSeeds = [
+        creatorsWalletKeypair.publicKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode('creator'),
+      ];
 
-  //       await program.rpc.createBenefit('x'.repeat(421), benefitNumber, {
-  //         accounts: {
-  //           benefit: benefit.publicKey,
-  //           creator: creator.publicKey,
-  //           authority: program.provider.wallet.publicKey,
-  //           systemProgram: anchor.web3.SystemProgram.programId,
-  //         },
-  //         signers: [benefit],
-  //       });
-  //     } catch (error) {
-  //       assert.equal(
-  //         error.msg,
-  //         'The provided Benefit description should be 420 characters long maximum.'
-  //       );
-  //       return;
-  //     }
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
 
-  //     assert.fail(
-  //       'The instruction should have failed with a 421-character benefit description.'
-  //     );
-  //   });
-  // });
+      const benefitNumber = anchor.utils.bytes.utf8.encode('1');
+      const benefitSeeds = [
+        creatorPubKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode('benefit'),
+        benefitNumber,
+      ];
+
+      const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        benefitSeeds,
+        program.programId
+      );
+
+      const txn = new anchor.web3.Transaction();
+      const signers = [creatorsWalletKeypair];
+
+      txn.add(
+        program.instruction.createAccount(
+          'testUsername',
+          'test@email.com',
+          'test description',
+          1,
+          {
+            accounts: {
+              creator: creatorPubKey,
+              authority: creatorsWalletKeypair.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+            signers: [creatorsWalletKeypair],
+          }
+        )
+      );
+
+      txn.add(
+        program.instruction.createBenefit('x'.repeat(421), benefitNumber, {
+          accounts: {
+            benefit: benefitPubKey,
+            creator: creatorPubKey,
+            authority: creatorsWalletKeypair.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+          signers: [creatorsWalletKeypair],
+        })
+      );
+
+      try {
+        await program.provider.send(txn, signers);
+      } catch (error) {
+        assert.equal(
+          error.msg,
+          'The provided Benefit description should be 420 characters long maximum.'
+        );
+        return;
+      }
+
+      assert.fail(
+        'The instruction should have failed with a 421-character benefit description.'
+      );
+    });
+  });
 });

@@ -11,7 +11,22 @@ describe('Creator', () => {
 
   describe('creation', () => {
     it("initializes an Account and stores the creator's info", async () => {
-      const creator = anchor.web3.Keypair.generate();
+      const creatorsWalletKeypair = anchor.web3.Keypair.generate();
+      const signature = await program.provider.connection.requestAirdrop(
+        creatorsWalletKeypair.publicKey,
+        1000000000 // 1 SOL — or 1 billion lamports
+      );
+      await program.provider.connection.confirmTransaction(signature);
+
+      const creatorSeeds = [
+        creatorsWalletKeypair.publicKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode('creator'),
+      ];
+
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
 
       await program.rpc.createAccount(
         'testUsername',
@@ -20,17 +35,15 @@ describe('Creator', () => {
         1,
         {
           accounts: {
-            creator: creator.publicKey,
-            authority: program.provider.wallet.publicKey,
+            creator: creatorPubKey,
+            authority: creatorsWalletKeypair.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
-          signers: [creator],
+          signers: [creatorsWalletKeypair],
         }
       );
 
-      const creatorAccount = await program.account.creator.fetch(
-        creator.publicKey
-      );
+      const creatorAccount = await program.account.creator.fetch(creatorPubKey);
 
       assert.equal(creatorAccount.username, 'testUsername');
       assert.equal(creatorAccount.email, 'test@email.com');
@@ -38,15 +51,39 @@ describe('Creator', () => {
       assert.equal(creatorAccount.numBenefits, 1);
       assert.equal(
         creatorAccount.authority.toBase58(),
-        program.provider.wallet.publicKey.toBase58()
+        creatorsWalletKeypair.publicKey.toBase58()
       );
     });
   });
 
   describe('contraints', () => {
+    // defining once, because all of these requests should fail
+    // so we won't have to worry about duplicates
+    const creatorsWalletKeypair = anchor.web3.Keypair.generate();
+    let creatorPubKey;
+
+    before(async () => {
+      const signature = await program.provider.connection.requestAirdrop(
+        creatorsWalletKeypair.publicKey,
+        1000000000 // 1 SOL — or 1 billion lamports
+      );
+      await program.provider.connection.confirmTransaction(signature);
+
+      const creatorSeeds = [
+        creatorsWalletKeypair.publicKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode('creator'),
+      ];
+
+      const [publicKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      creatorPubKey = publicKey;
+    });
+
     it('cannot create a Creator with username over 42 characters', async () => {
       try {
-        const creator = anchor.web3.Keypair.generate();
         await program.rpc.createAccount(
           'x'.repeat(43),
           'test@email.com',
@@ -54,11 +91,11 @@ describe('Creator', () => {
           1,
           {
             accounts: {
-              creator: creator.publicKey,
-              authority: program.provider.wallet.publicKey,
+              creator: creatorPubKey,
+              authority: creatorsWalletKeypair.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
-            signers: [creator],
+            signers: [creatorsWalletKeypair],
           }
         );
       } catch (error) {
@@ -76,7 +113,6 @@ describe('Creator', () => {
 
     it('cannot create a Creator with email over 42 characters', async () => {
       try {
-        const creator = anchor.web3.Keypair.generate(); // Generate a keypair for accounts (publicKey) and signers
         await program.rpc.createAccount(
           'testUsername',
           'x'.repeat(43),
@@ -84,11 +120,11 @@ describe('Creator', () => {
           1,
           {
             accounts: {
-              creator: creator.publicKey,
-              authority: program.provider.wallet.publicKey,
+              creator: creatorPubKey,
+              authority: creatorsWalletKeypair.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
-            signers: [creator],
+            signers: [creatorsWalletKeypair],
           }
         );
       } catch (error) {
@@ -106,7 +142,6 @@ describe('Creator', () => {
 
     it('cannot create a Creator with description over 420 characters', async () => {
       try {
-        const creator = anchor.web3.Keypair.generate(); // Generate a keypair for accounts (publicKey) and signers
         await program.rpc.createAccount(
           'testUsername',
           'test@email.com',
@@ -114,11 +149,11 @@ describe('Creator', () => {
           1,
           {
             accounts: {
-              creator: creator.publicKey,
-              authority: program.provider.wallet.publicKey,
+              creator: creatorPubKey,
+              authority: creatorsWalletKeypair.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
-            signers: [creator],
+            signers: [creatorsWalletKeypair],
           }
         );
       } catch (error) {

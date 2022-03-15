@@ -1,5 +1,7 @@
 
 // benefit box component
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+
 const BenefitBox = () => {
   return (
     <div className="box-border my-4 h-28 w-3/5 p-2  border-2 border-black">
@@ -55,6 +57,9 @@ const creatorLandingPage = () => {
         <BenefitBox />
         <BenefitBox />
         <BenefitBox />
+      </div>
+      <div className="fixed rounded-xl top-7/8 left-1/2 transform -translate-x-1/2 -translate-y-1/4 bg-bg-primary">
+        <WalletMultiButton />
       </div>
     </div>
 

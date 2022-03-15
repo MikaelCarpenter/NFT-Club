@@ -37,5 +37,11 @@ pub mod nft_club {
 
     pub fn update_subscription(ctx: Context<UpdateSubscription>) -> Result<()> {
         components::update_subscription(ctx)
+    pub fn delete_account(ctx: Context<DeleteAccount>) -> Result<()> {
+        components::delete_account(ctx) 
+    }
+
+    pub fn delete_benefit(ctx: Context<DeleteBenefit>, benefit_number: String) -> Result<()> {
+        components::delete_benefit(ctx, benefit_number)
     }
 }

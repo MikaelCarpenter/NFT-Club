@@ -4,7 +4,12 @@ use crate::*;
 // 
 // Endpoints
 // 
-pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Result<()> {
+pub fn create_benefit(
+    ctx: Context<CreateBenefit>, 
+    name: String, 
+    description: String, 
+    _benefit_number: String
+) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
     let authority: &Signer = &ctx.accounts.authority;
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
@@ -13,7 +18,9 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Resul
     creator.num_benefits = creator.num_benefits.checked_add(1).unwrap();
 
     benefit.authority = *authority.key;
+    benefit.name = name;
     benefit.description = description;
+    benefit.bump = *ctx.bumps.get("benefit").unwrap();
 
     Ok(())
 }
@@ -22,10 +29,18 @@ pub fn create_benefit(ctx: Context<CreateBenefit>, description: String) -> Resul
 // Data Validators
 // 
 #[derive(Accounts)]
-#[instruction(description: String)]
+#[instruction(name: String, description: String, benefit_number: String)]
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
-    #[account(init, payer = authority, space = Benefit::LEN)]
+    // This also makes sure that we have only one benefit for the following combination
+    #[account(
+        init, 
+        // seeded with creatorPubKey + benefit_number + "benefit".
+        seeds = [creator.key().as_ref(), b"benefit", benefit_number.as_ref()], 
+        bump, 
+        payer = authority, 
+        space = Benefit::LEN
+    )]
     pub benefit: Account<'info, Benefit>,
 
     // Guarantee that account is both signed by authority
@@ -40,14 +55,21 @@ pub struct CreateBenefit<'info> {
     pub authority: Signer<'info>,
 
     // Ensure System Program is the official one from Solana and handle errors
-    #[account(constraint = description.chars().count() <= 420 @ creator::ErrorCode::BenefitDescriptionTooLong)]
+    #[account(constraint = description.chars().count() <= 420 @ errors::ErrorCode::BenefitDescriptionTooLong)]
+    // Ensure benefit_number == num_benefits + 1
+    #[account(
+        constraint = benefit_number.parse::<u8>().unwrap() == creator.num_benefits + 1 
+        @ errors::ErrorCode::BenefitNumberInvalid
+    )]
     pub system_program: Program<'info, System>,
 }
 
 #[account]
 pub struct Benefit {
     pub authority: Pubkey,
+    pub name: String,
     pub description: String,
+    pub bump: u8,
 }
 
 /*
@@ -71,11 +93,14 @@ pub struct Benefit {
 const DISCRIMINATOR_LENGTH: usize = 8;
 const PUBKEY_LENGTH: usize = 32;
 const STRING_LENGTH_PREFIX: usize = 4;
+const NAME_LENGTH: usize = 100 * 4;
 const DESCRIPTION_LENGTH: usize = 420 * 4;
-
+const BUMP_LENGTH: usize = 1;
 
 impl Benefit {
     const LEN: usize = DISCRIMINATOR_LENGTH
-        + PUBKEY_LENGTH
-        + STRING_LENGTH_PREFIX + DESCRIPTION_LENGTH;
+        + PUBKEY_LENGTH 
+        + STRING_LENGTH_PREFIX + NAME_LENGTH
+        + STRING_LENGTH_PREFIX + DESCRIPTION_LENGTH
+        + BUMP_LENGTH;
 }

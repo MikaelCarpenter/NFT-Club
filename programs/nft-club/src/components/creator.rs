@@ -28,6 +28,7 @@ pub fn create_account(
 }
 
 // Bundle Benefit deletion into same transaction on frontend
+// Add deletion of Benefits before deleting account here
 pub fn delete_account(ctx: Context<DeleteAccount>) -> Result<()> {
     msg!("Creator closed successfully");
 

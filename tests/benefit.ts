@@ -17,7 +17,6 @@ describe('Benefit', () => {
     
   describe('creation', () => {
     afterEach(async () => {
-      console.log("AFTER EACH");
       const creatorSeeds = [
         creatorsWalletKeypair.publicKey.toBuffer(),
         anchor.utils.bytes.utf8.encode('creator'),
@@ -79,13 +78,11 @@ describe('Benefit', () => {
       const txnSigners = []
       await program.provider.send(txn, txnSigners);
 
-      console.log("Finished sending transaction");
 
       // Fetch each Benefit and check that it no longer exists
       try {
         for (let i = 0; i < benefitPubKeys.length; i++) {
           const deletedBenefit = await program.account.benefit.fetch(benefitPubKeys[i]);
-          console.log(deletedBenefit);
         }
       }
       catch(error) {
@@ -95,15 +92,12 @@ describe('Benefit', () => {
 
       // Check if wallet balance is same as original after deletion
       const balanceAfterDeletion = await connection.getBalance(creatorsWalletKeypair.publicKey);
-      console.log('original balance', originalBalance);
-      console.log('balance after deletion', balanceAfterDeletion);
       assert.equal(balanceAfterDeletion, originalBalance - 10000)
 
 
       // Fetch Creator and check that it no longer exists
       try {
         const deletedCreator = await program.account.creator.fetch(creatorPubKey);
-        console.log(deletedCreator);
       }
       catch(error) {
         const errorMsg = 'Error: Account does not exist BT4EzoEr2wsrJ2RJnn73KrphGbKxP8FLyir5N4qTNcnj';
@@ -179,7 +173,6 @@ describe('Benefit', () => {
       const benefitAccount = await program.account.benefit.fetch(benefitPubKey);
 
       balanceAfterCreation = await connection.getBalance(creatorsWalletKeypair.publicKey);
-      console.log('balance after creation', balanceAfterCreation);
 
       assert.equal(
         benefitAccount.authority.toBase58(),
@@ -250,7 +243,6 @@ describe('Benefit', () => {
       try {
         await program.provider.send(txn, []);
       } catch (error) {
-        console.log(error);
         assert.equal(
           error.msg,
           'The provided Benefit description should be 420 characters long maximum.'

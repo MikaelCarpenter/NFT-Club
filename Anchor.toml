@@ -9,4 +9,4 @@ cluster = "devnet"
 wallet = "~/.config/solana/DDS9fNSRutb3JaTEUGv25LdzUz4m9diYmFBA4L3fK2vm.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts -g 'Benefit'"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

@@ -28,7 +28,7 @@ pub fn create_benefit(
 pub fn delete_benefit(ctx: Context<DeleteBenefit>,  _benefit_number: String) -> Result<()> {
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
 
-    // Try to increment. If overflow, panic will propagate an error
+    // Try to decrement. If overflow, panic will propagate an error
     creator.num_benefits = creator.num_benefits.checked_sub(1).unwrap();
 
     msg!("Benefit closed successfully");

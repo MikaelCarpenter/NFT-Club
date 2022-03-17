@@ -6,7 +6,7 @@ pub mod errors;
 
 use components::*;
 
-declare_id!("6dND1tHXuvCzB9Fe88FvnrZEqTVraPWGxtR5HQs4Z3dx");
+declare_id!("CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ");
 
 #[program]
 pub mod nft_club {

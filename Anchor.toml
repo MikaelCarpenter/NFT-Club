@@ -1,5 +1,5 @@
 [programs.devnet]
-nft_club = "6dND1tHXuvCzB9Fe88FvnrZEqTVraPWGxtR5HQs4Z3dx"
+nft_club = "CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -9,4 +9,4 @@ cluster = "devnet"
 wallet = "~/.config/solana/DDS9fNSRutb3JaTEUGv25LdzUz4m9diYmFBA4L3fK2vm.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts -g 'Benefit'"

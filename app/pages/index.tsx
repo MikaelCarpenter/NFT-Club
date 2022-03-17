@@ -8,6 +8,7 @@ import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 
 import IDL from '../../target/idl/nft_club.json';
 import { NftClub } from '../../target/types/nft_club';
+import { useUser } from '../hooks/userUser';
 
 const PROGRAM_ID = new anchor.web3.PublicKey(
   '6dND1tHXuvCzB9Fe88FvnrZEqTVraPWGxtR5HQs4Z3dx'
@@ -22,20 +23,12 @@ const connection = new anchor.web3.Connection(
   OPTS.preflightCommitment
 );
 
-interface User {
-  creatorAccount: Record<string, unknown> | null;
-  subscriptions: Record<string, unknown>[];
-}
-
 const Home: NextPage = () => {
   const router = useRouter();
   const connectedWallet = useAnchorWallet();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [user, setUser] = useState<User>({
-    creatorAccount: null,
-    subscriptions: [],
-  });
+  const { user, setUser } = useUser();
 
   const program = useMemo(() => {
     if (connectedWallet) {
@@ -98,18 +91,16 @@ const Home: NextPage = () => {
         nftClubProgram,
         wallet
       );
+
       (creator || subscriptions.length) &&
-        setUser((user) => {
-          user.subscriptions = subscriptions as unknown as Record<
-            string,
-            unknown
-          >[];
-          user.creatorAccount = creator;
-          return user;
+        setUser({
+          subscriptions,
+          creatorAccount: creator,
         });
+
       setIsLoading(false);
     },
-    [getCreatorAccountForUserWallet, fetchSubscriptionsForUserWallet]
+    [getCreatorAccountForUserWallet, fetchSubscriptionsForUserWallet, setUser]
   );
 
   useEffect(() => {
@@ -155,11 +146,31 @@ const Home: NextPage = () => {
         {!connectedWallet ? (
           <WalletMultiButton className="btn btn-primary" />
         ) : user.creatorAccount ? (
-          <p>CREATOR FOUND</p>
-        ) : (
-          <button className="btn btn-primary" onClick={handleBecomeCreator}>
-            Become a Creator
+          <button
+            className="btn btn-primary"
+            onClick={() => router.push('/creator-hub')}
+          >
+            Visit Creator Hub
           </button>
+        ) : (
+          <div>
+            <button className="btn btn-primary" onClick={handleBecomeCreator}>
+              Become a Creator
+            </button>
+            <br />
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                user.subscriptions.length
+                  ? router.push('/subscription-hub')
+                  : router.push('/subcribe');
+              }}
+            >
+              {user.subscriptions.length
+                ? 'See my subsriptions'
+                : 'Subscribe to a creator'}
+            </button>
+          </div>
         )}
       </div>
     </div>

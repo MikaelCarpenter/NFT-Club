@@ -11,11 +11,8 @@ const SubscriptionHub: NextPage = () => {
   // Reroute to `/` if wallet not connected.
   !connectedWallet && router.push('/');
 
-  // Reroute to `/creator-hub` if the user is a creator.
-  user.creatorAccount && router.push('/creator-hub');
-
-  // Reroute to `/subscribe` if user hasn't subscribed to any content.
-  !user.subscriptions.length && router.push('/subscribe');
+  // Reroute to `/creator-landing-page` if user hasn't subscribed to any content.
+  !user.subscriptions.length && router.push('/creator-landing-page');
 
   // TODO: Show the different subscriptions
   return null;

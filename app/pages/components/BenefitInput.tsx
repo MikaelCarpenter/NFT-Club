@@ -1,13 +1,15 @@
-import { useState} from 'react';
+import { useState } from 'react';
 
 const BenefitInput = () => {
   const [description, setDescription] = useState('');
 
-  const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>, inputField: string) => {
+  const handleInput = (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+    inputField: string
+  ) => {
     setDescription(event.target.value);
     console.log(description);
-  }
-
+  };
 
   return (
     <div className="w-full py-8 h-1/4">

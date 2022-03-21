@@ -1,7 +1,14 @@
-import { RefObject, useCallback, useEffect, useRef, useMemo, useState } from 'react';
+import {
+  RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+  useState,
+} from 'react';
 import * as anchor from '@project-serum/anchor';
 import { ConfirmOptions } from '@solana/web3.js';
-import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
 
 import IDL from '../../target/idl/nft_club.json';
 
@@ -18,7 +25,6 @@ const connection = new anchor.web3.Connection(
   endpoint,
   OPTS.preflightCommitment
 );
-
 
 const SignUp = () => {
   const usernameRef = useRef<HTMLInputElement>(null);
@@ -48,7 +54,6 @@ const SignUp = () => {
     setBenefitRefs((prev) => [...prev, { current: null }]);
   }, []);
 
-
   // Only call if wallet connected.
   const handleCreateAccount = useCallback(async () => {
     const username = usernameRef?.current?.value;
@@ -63,7 +68,6 @@ const SignUp = () => {
     benefits = benefits.filter((benefit) => benefit);
     const numBenefits = benefits.length;
 
-
     // Create account on chain
     const creatorSeeds = [
       connectedWallet!.publicKey.toBuffer(),
@@ -74,64 +78,6 @@ const SignUp = () => {
       creatorSeeds,
       program!.programId
     );
-
-      //DELETE
-      /*
-      const creator = await program!.account.creator.fetch(creatorPubKey);
-      console.log("creator", creator);
-      console.log("numBenefits", numBenefits);
-
-      const newtxn = new anchor.web3.Transaction();
-      let benefitPubKeys = [];
-
-      // Delete all Benefits of a Creator
-      for (let i = 1; i <= numBenefits; i++) {
-        // delete with index
-        const benefitNumber = anchor.utils.bytes.utf8.encode(`${i}`);
-        const benefitSeeds = [
-          creatorPubKey.toBuffer(),
-          anchor.utils.bytes.utf8.encode('benefit'),
-          benefitNumber,
-        ];
-
-        const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
-          benefitSeeds,
-          program!.programId
-        );
-        benefitPubKeys.push(benefitPubKey);
-
-        // need separate txns to check numbenefits decrement?
-        
-        // Delete Benefit
-        newtxn.add(
-          program!.instruction.deleteBenefit(benefitNumber, {
-            accounts: {
-              benefit: benefitPubKey,
-              creator: creatorPubKey,
-              authority: connectedWallet!.publicKey,
-              systemProgram: anchor.web3.SystemProgram.programId,
-            },
-          })
-        );
-        console.log("DELETED BENEFIT");
-      }
-
-      // Delete Creator
-      newtxn.add(
-        program!.instruction.deleteAccount({
-          accounts: {
-            creator: creatorPubKey,
-            authority: connectedWallet!.publicKey,
-            systemProgram: anchor.web3.SystemProgram.programId,
-          },
-          signers: [],
-        })
-      )
-      await program!.provider.send(newtxn, []);
-      console.log("DELETED");
-      */
-      // DONE DELETING
-      // DONE DELETING
 
     // Create Creator account
     const txn = new anchor.web3.Transaction();
@@ -146,49 +92,40 @@ const SignUp = () => {
             creator: creatorPubKey,
             authority: connectedWallet!.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
-          }
+          },
         }
         // No signers necessary: wallet and pda are implicit
       )
     );
 
+    // Create Benefit accounts
     for (let i = 0; i < numBenefits; i++) {
-      const benefitNumber = anchor.utils.bytes.utf8.encode(`${i + 1}`)
+      const benefitNumber = anchor.utils.bytes.utf8.encode(`${i + 1}`);
       const benefitSeeds = [
-        connectedWallet!.publicKey.toBuffer(),
+        creatorPubKey.toBuffer(),
         anchor.utils.bytes.utf8.encode('benefit'),
-        benefitNumber
+        benefitNumber,
       ];
-      const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(benefitSeeds, program!.programId);
+
+      const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        benefitSeeds,
+        program!.programId
+      );
 
       txn.add(
-        program!.instruction.createBenefit(
-          benefits[i],
-          benefitNumber,
-          {
-            accounts: {
-              benefit: benefitPubKey,
-              creator: creatorPubKey,
-              authority: connectedWallet!.publicKey,
-              systemProgram: anchor.web3.SystemProgram.programId,
-            },
-            // No signers necessary: wallet and pda are implicit
-          }
-        )
+        program!.instruction.createBenefit(benefits[i], benefitNumber, {
+          accounts: {
+            benefit: benefitPubKey,
+            creator: creatorPubKey,
+            authority: connectedWallet!.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+          // No signers necessary: wallet and pda are implicit
+        })
       );
     }
 
     await program!.provider.send(txn, []);
-
-    const creatorAccount = await program!.account.creator.fetch(creatorPubKey);
-    console.log(creatorAccount);
-    console.log('creator account', creatorAccount);
-
-    console.log('username', username);
-    console.log('email', email);
-    console.log('description', description);
-    console.log('benefits', benefits);
-    console.log('numBenefits', numBenefits);
   }, [benefitRefs]);
 
   return (

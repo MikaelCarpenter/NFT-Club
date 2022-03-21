@@ -11,10 +11,10 @@ describe('Benefit', () => {
   const creatorsWalletKeypair = program.provider.wallet;
 
   const endpoint = 'https://api.devnet.solana.com';
-  const connection = new anchor.web3.Connection(endpoint, "confirmed");
+  const connection = new anchor.web3.Connection(endpoint, 'confirmed');
   let originalBalance;
   let balanceAfterCreation;
-    
+
   describe('creation', () => {
     afterEach(async () => {
       const creatorSeeds = [
@@ -50,7 +50,7 @@ describe('Benefit', () => {
         benefitPubKeys.push(benefitPubKey);
 
         // need separate txns to check numbenefits decrement?
-        
+
         // Delete Benefit
         txn.add(
           program.instruction.deleteBenefit(benefitNumber, {
@@ -74,40 +74,45 @@ describe('Benefit', () => {
           },
           signers: [],
         })
-      )
-      const txnSigners = []
+      );
+      const txnSigners = [];
       await program.provider.send(txn, txnSigners);
-
 
       // Fetch each Benefit and check that it no longer exists
       try {
         for (let i = 0; i < benefitPubKeys.length; i++) {
-          const deletedBenefit = await program.account.benefit.fetch(benefitPubKeys[i]);
+          const deletedBenefit = await program.account.benefit.fetch(
+            benefitPubKeys[i]
+          );
         }
-      }
-      catch(error) {
-        const errorMsg = 'Error: Account does not exist 8NC7Wvx2YdsjHfX8ENkmGWRAZCKg8KUEafbajipNg7dz';
+      } catch (error) {
+        const errorMsg =
+          'Error: Account does not exist 8NC7Wvx2YdsjHfX8ENkmGWRAZCKg8KUEafbajipNg7dz';
         assert.equal(error.toString(), errorMsg);
       }
 
       // Check if wallet balance is same as original after deletion
-      const balanceAfterDeletion = await connection.getBalance(creatorsWalletKeypair.publicKey);
-      assert.equal(balanceAfterDeletion, originalBalance - 10000)
-
+      const balanceAfterDeletion = await connection.getBalance(
+        creatorsWalletKeypair.publicKey
+      );
+      assert.equal(balanceAfterDeletion, originalBalance - 10000);
 
       // Fetch Creator and check that it no longer exists
       try {
-        const deletedCreator = await program.account.creator.fetch(creatorPubKey);
-      }
-      catch(error) {
-        const errorMsg = 'Error: Account does not exist BT4EzoEr2wsrJ2RJnn73KrphGbKxP8FLyir5N4qTNcnj';
+        const deletedCreator = await program.account.creator.fetch(
+          creatorPubKey
+        );
+      } catch (error) {
+        const errorMsg =
+          'Error: Account does not exist BT4EzoEr2wsrJ2RJnn73KrphGbKxP8FLyir5N4qTNcnj';
         assert.equal(error.toString(), errorMsg);
       }
     });
 
-
     it('can bundle the creation of a Creator and their Benefit account', async () => {
-      originalBalance = await connection.getBalance(creatorsWalletKeypair.publicKey);
+      originalBalance = await connection.getBalance(
+        creatorsWalletKeypair.publicKey
+      );
       const creatorSeeds = [
         creatorsWalletKeypair.publicKey.toBuffer(),
         anchor.utils.bytes.utf8.encode('creator'),
@@ -172,7 +177,9 @@ describe('Benefit', () => {
       const creatorAccount = await program.account.creator.fetch(creatorPubKey);
       const benefitAccount = await program.account.benefit.fetch(benefitPubKey);
 
-      balanceAfterCreation = await connection.getBalance(creatorsWalletKeypair.publicKey);
+      balanceAfterCreation = await connection.getBalance(
+        creatorsWalletKeypair.publicKey
+      );
 
       assert.equal(
         benefitAccount.authority.toBase58(),
@@ -186,7 +193,7 @@ describe('Benefit', () => {
       expect(balanceAfterCreation).to.be.below(originalBalance);
     });
   });
-  
+
   describe('constraints', () => {
     it('cannot create a Benefit with description over 420 characters', async () => {
       const creatorSeeds = [
@@ -255,7 +262,6 @@ describe('Benefit', () => {
       );
     });
   });
-
 
   /*
   describe('deletion', () => {

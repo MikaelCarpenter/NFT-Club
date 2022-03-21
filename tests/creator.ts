@@ -18,10 +18,9 @@ describe('Creator', () => {
   ];
 
   const endpoint = 'https://api.devnet.solana.com';
-  const connection = new anchor.web3.Connection(endpoint, "confirmed");
+  const connection = new anchor.web3.Connection(endpoint, 'confirmed');
   let originalBalance;
   let balanceAfterCreation;
-
 
   describe('creation', () => {
     afterEach(async () => {
@@ -50,30 +49,35 @@ describe('Creator', () => {
           },
           signers: [],
         })
-      )
-      const txnSigners = []
+      );
+      const txnSigners = [];
       await program.provider.send(txn, txnSigners);
 
-      console.log("Finished sending transaction");
+      console.log('Finished sending transaction');
 
       // Check if wallet balance is same as original after deletion
-      const balanceAfterDeletion = await connection.getBalance(creatorsWalletKeypair.publicKey);
-      assert.equal(balanceAfterDeletion, originalBalance - 10000)
-
+      const balanceAfterDeletion = await connection.getBalance(
+        creatorsWalletKeypair.publicKey
+      );
+      assert.equal(balanceAfterDeletion, originalBalance - 10000);
 
       // Fetch Creator and check that it no longer exists
       try {
-        const deletedCreator = await program.account.creator.fetch(creatorPubKey);
+        const deletedCreator = await program.account.creator.fetch(
+          creatorPubKey
+        );
         console.log(deletedCreator);
-      }
-      catch(error) {
-        const errorMsg = 'Error: Account does not exist BT4EzoEr2wsrJ2RJnn73KrphGbKxP8FLyir5N4qTNcnj';
+      } catch (error) {
+        const errorMsg =
+          'Error: Account does not exist BT4EzoEr2wsrJ2RJnn73KrphGbKxP8FLyir5N4qTNcnj';
         assert.equal(error.toString(), errorMsg);
       }
     });
 
     it("initializes an Account and stores the creator's info", async () => {
-      originalBalance = await connection.getBalance(creatorsWalletKeypair.publicKey);
+      originalBalance = await connection.getBalance(
+        creatorsWalletKeypair.publicKey
+      );
       const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
         creatorSeeds,
         program.programId
@@ -93,7 +97,9 @@ describe('Creator', () => {
         }
       );
 
-      balanceAfterCreation = await connection.getBalance(creatorsWalletKeypair.publicKey);
+      balanceAfterCreation = await connection.getBalance(
+        creatorsWalletKeypair.publicKey
+      );
       expect(balanceAfterCreation).to.be.below(originalBalance);
 
       const creatorAccount = await program.account.creator.fetch(creatorPubKey);

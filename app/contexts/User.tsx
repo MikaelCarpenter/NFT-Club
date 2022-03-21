@@ -6,7 +6,10 @@ export interface UserProviderProps {
 }
 
 export const UserProvider: FC<UserProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User>({} as User);
+  const [user, setUser] = useState<User>({
+    creatorAccount: null,
+    subscriptions: [],
+  });
 
   return (
     <UserContext.Provider

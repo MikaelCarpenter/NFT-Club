@@ -237,14 +237,19 @@ describe('Benefit', () => {
       );
 
       txn.add(
-        program.instruction.createBenefit('Benefit name', 'x'.repeat(421), benefitNumber, {
-          accounts: {
-            benefit: benefitPubKey,
-            creator: creatorPubKey,
-            authority: creatorsWalletKeypair.publicKey,
-            systemProgram: anchor.web3.SystemProgram.programId,
-          },
-        })
+        program.instruction.createBenefit(
+          'Benefit name',
+          'x'.repeat(421),
+          benefitNumber,
+          {
+            accounts: {
+              benefit: benefitPubKey,
+              creator: creatorPubKey,
+              authority: creatorsWalletKeypair.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+          }
+        )
       );
 
       try {

@@ -25,6 +25,17 @@ pub fn create_benefit(
     Ok(())
 }
 
+pub fn delete_benefit(ctx: Context<DeleteBenefit>,  _benefit_number: String) -> Result<()> {
+    let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
+
+    // Try to decrement. If overflow, panic will propagate an error
+    creator.num_benefits = creator.num_benefits.checked_sub(1).unwrap();
+
+    msg!("Benefit closed successfully");
+
+    Ok(())
+}
+
 // 
 // Data Validators
 // 
@@ -64,6 +75,29 @@ pub struct CreateBenefit<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+#[instruction(benefit_number: String)]
+pub struct DeleteBenefit<'info> {
+    // Create account of type Benefit and assign creator's pubkey as the payer
+    #[account(mut, has_one = authority, seeds=[creator.key().as_ref(), b"benefit", benefit_number.as_bytes()], bump=benefit.bump, close=authority)]
+    pub benefit: Account<'info, Benefit>,
+
+    // Guarantee that account is both signed by authority
+    // and that &creator.authority == authority.key
+    // In other words, signer must have a creator account to create a benefit
+    // Use here and for updating Benefit/Creator accounts
+    #[account(mut, has_one = authority)]
+    pub creator: Account<'info, Creator>,
+
+    // Define user as mutable - money in their account, description
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    // Ensure System Program is the official one from Solana and handle errors
+    pub system_program: Program<'info, System>,
+}
+
+//Add benefit number
 #[account]
 pub struct Benefit {
     pub authority: Pubkey,

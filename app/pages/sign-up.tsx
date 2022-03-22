@@ -60,12 +60,9 @@ const SignUp = () => {
     const email = emailRef?.current?.value;
     const description = descriptionRef?.current?.value;
 
-    let benefits = benefitRefs.map((benefitRef) => {
+    const benefits = benefitRefs.map((benefitRef) => {
       return benefitRef?.current?.value;
-    });
-
-    // Filter out blank benefits
-    benefits = benefits.filter((benefit) => benefit);
+    }).filter((benefit) => benefit);
     const numBenefits = benefits.length;
 
     // Create account on chain

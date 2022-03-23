@@ -87,7 +87,6 @@ describe('Creator', () => {
         'testUsername',
         'test@email.com',
         'test description',
-        0,
         {
           accounts: {
             creator: creatorPubKey,
@@ -126,7 +125,6 @@ describe('Creator', () => {
           'x'.repeat(43),
           'test@email.com',
           'test description',
-          0,
           {
             accounts: {
               creator: creatorPubKey,
@@ -158,7 +156,6 @@ describe('Creator', () => {
           'testUsername',
           'x'.repeat(43),
           'test description',
-          0,
           {
             accounts: {
               creator: creatorPubKey,
@@ -190,7 +187,6 @@ describe('Creator', () => {
           'testUsername',
           'test@email.com',
           'x'.repeat(421),
-          0,
           {
             accounts: {
               creator: creatorPubKey,
@@ -210,6 +206,144 @@ describe('Creator', () => {
       assert.fail(
         'The instruction should have failed with a 421-character description.'
       );
+    });
+  });
+
+  describe('update', () => {
+    // Create account
+    beforeEach(async () => {
+      originalBalance = await connection.getBalance(
+        creatorsWalletKeypair.publicKey
+      );
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      await program.rpc.createAccount(
+        'testUsername',
+        'test@email.com',
+        'test description',
+        {
+          accounts: {
+            creator: creatorPubKey,
+            authority: creatorsWalletKeypair.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+        }
+      );
+
+      balanceAfterCreation = await connection.getBalance(
+        creatorsWalletKeypair.publicKey
+      );
+      expect(balanceAfterCreation).to.be.below(originalBalance);
+
+      const creatorAccount = await program.account.creator.fetch(creatorPubKey);
+
+      assert.equal(creatorAccount.username, 'testUsername');
+      assert.equal(creatorAccount.email, 'test@email.com');
+      assert.equal(creatorAccount.description, 'test description');
+      assert.equal(creatorAccount.numBenefits, 0);
+      assert.equal(
+        creatorAccount.authority.toBase58(),
+        creatorsWalletKeypair.publicKey.toBase58()
+      );
+    })
+
+    // Delete account
+    afterEach(async () => {
+      const creatorSeeds = [
+        creatorsWalletKeypair.publicKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode('creator'),
+      ];
+
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      const txn = new anchor.web3.Transaction();
+
+      // Delete Creator
+      txn.add(
+        program.instruction.deleteAccount({
+          accounts: {
+            creator: creatorPubKey,
+            authority: creatorsWalletKeypair.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+          signers: [],
+        })
+      );
+      const txnSigners = [];
+      await program.provider.send(txn, txnSigners);
+
+      console.log('Finished sending transaction');
+
+      // Check if wallet balance is same as original after deletion
+      const balanceAfterDeletion = await connection.getBalance(
+        creatorsWalletKeypair.publicKey
+      );
+      assert.equal(balanceAfterDeletion, originalBalance - 10000);
+
+      // Fetch Creator and check that it no longer exists
+      try {
+        const deletedCreator = await program.account.creator.fetch(
+          creatorPubKey
+        );
+        console.log(deletedCreator);
+      } catch (error) {
+        const errorMsg =
+          'Error: Account does not exist BT4EzoEr2wsrJ2RJnn73KrphGbKxP8FLyir5N4qTNcnj';
+        assert.equal(error.toString(), errorMsg);
+      }
+    });
+
+    it("changes a Creator's data given its seeds", async () => {
+      const creatorSeeds = [
+        creatorsWalletKeypair.publicKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode('creator'),
+      ];
+
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      const creatorAccount = await program.account.creator.fetch(creatorPubKey);
+
+      const txn = new anchor.web3.Transaction();
+
+      // Update Creator
+      txn.add(
+        program.instruction.updateAccount(
+          'updatedUsername',
+          'updated@email.com',
+          'updated description',
+          {
+            accounts: {
+              creator: creatorPubKey,
+              authority: creatorsWalletKeypair.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+          }
+        )
+      );
+
+      const txnSigners = [];
+      await program.provider.send(txn, txnSigners);
+
+      console.log("SENT TXN");
+
+      const updatedAccount = await program.account.creator.fetch(creatorPubKey);
+
+      assert.equal(updatedAccount.username, 'updatedUsername');
+      assert.equal(updatedAccount.email, 'updated@email.com');
+      assert.equal(updatedAccount.description, 'updated description');
+
+      assert.notEqual(creatorAccount.username, updatedAccount.username)
+      assert.notEqual(creatorAccount.email, updatedAccount.email)
+      assert.notEqual(creatorAccount.description, updatedAccount.description)
     });
   });
 

@@ -35,6 +35,29 @@ pub fn delete_account(ctx: Context<DeleteAccount>) -> Result<()> {
     Ok(())
 }
 
+pub fn update_account(
+    ctx: Context<UpdateAccount>,
+    username: String,
+    email: String,
+    description: String,
+) -> Result<()> {
+    let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
+    let authority: &Signer = &ctx.accounts.authority;
+    msg!("username: {}", username);
+    msg!("email: {}", email);
+    msg!("description: {}", description);
+
+    creator.authority = *authority.key;
+    creator.username = username;
+    creator.email = email;
+    creator.description = description;
+    creator.bump = *ctx.bumps.get("creator").unwrap();
+
+    creator.bump = *ctx.bumps.get("creator").unwrap();
+
+    Ok(())
+}
+
 // 
 // Data Validators
 //
@@ -67,6 +90,25 @@ pub struct DeleteAccount<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(username: String, email: String, description: String)]
+pub struct UpdateAccount<'info> {
+    // Create account of type Creator and assign creators's pubkey as the payer
+    // seeded with creatorWalletPubKey + "creator"
+    #[account(init, has_one=authority, seeds=[authority.key().as_ref(), b"creator"], bump, payer = authority, space = Creator::LEN)]
+    pub creator: Account<'info, Creator>,
+
+    // Define user as mutable - money in their account, profile data, etc.
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    // Ensure System Program is the official one from Solana and handle errors
+    #[account(constraint = username.chars().count() <= 42 @ errors::ErrorCode::UsernameTooLong)]
+    #[account(constraint = email.chars().count() <= 42 @ errors::ErrorCode::EmailTooLong)]
+    #[account(constraint = description.chars().count() <= 420 @ errors::ErrorCode::DescriptionTooLong)]
     pub system_program: Program<'info, System>,
 }
 

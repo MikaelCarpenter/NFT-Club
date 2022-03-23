@@ -143,7 +143,6 @@ describe('Benefit', () => {
           'testUsername',
           'test@email.com',
           'test description',
-          0,
           {
             accounts: {
               creator: creatorPubKey,
@@ -225,7 +224,6 @@ describe('Benefit', () => {
           'testUsername',
           'test@email.com',
           'test description',
-          0,
           {
             accounts: {
               creator: creatorPubKey,

@@ -6,7 +6,7 @@ pub mod errors;
 
 use components::*;
 
-declare_id!("6dND1tHXuvCzB9Fe88FvnrZEqTVraPWGxtR5HQs4Z3dx");
+declare_id!("CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ");
 
 #[program]
 pub mod nft_club {
@@ -35,7 +35,15 @@ pub mod nft_club {
         components::create_subscription(ctx)
     }
 
-    pub fn update_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
+    pub fn update_subscription(ctx: Context<UpdateSubscription>) -> Result<()> {
         components::update_subscription(ctx)
+    }
+
+    pub fn delete_account(ctx: Context<DeleteAccount>) -> Result<()> {
+        components::delete_account(ctx) 
+    }
+
+    pub fn delete_benefit(ctx: Context<DeleteBenefit>, benefit_number: String) -> Result<()> {
+        components::delete_benefit(ctx, benefit_number)
     }
 }

@@ -10,7 +10,7 @@ import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 import IDL from '../../target/idl/nft_club.json';
 
 const PROGRAM_ID = new anchor.web3.PublicKey(
-  '6dND1tHXuvCzB9Fe88FvnrZEqTVraPWGxtR5HQs4Z3dx'
+  'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
 );
 const OPTS = {
   preflightCommitment: 'processed',
@@ -69,10 +69,10 @@ const Home: NextPage = () => {
   }, [router]);
 
   return (
-    <div className="flex h-full items-center justify-center">
-      <div className="mb-16 flex flex-col items-center">
+    <div className="flex items-center justify-center h-full">
+      <div className="flex flex-col items-center mb-16">
         <div className="flex">
-          <div className="prose flex flex-1 items-center justify-center">
+          <div className="flex items-center justify-center flex-1 prose">
             <h1 className="text-center">
               Welcome
               <br />
@@ -84,7 +84,7 @@ const Home: NextPage = () => {
               </span>
             </h1>
           </div>
-          <div className="prose flex flex-1 items-center justify-center">
+          <div className="flex items-center justify-center flex-1 prose">
             <p className="p-8 text-center">
               Here's a big mass of text. Cool... Here's a big mass of text.
               Cool...Here's a big mass of text. Cool...Here's a big mass of

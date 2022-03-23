@@ -27,7 +27,15 @@ pub fn create_account(
     Ok(())
 }
 
-//
+// Bundle Benefit deletion into same transaction on frontend
+// Add deletion of Benefits before deleting account here
+pub fn delete_account(ctx: Context<DeleteAccount>) -> Result<()> {
+    msg!("Creator closed successfully");
+
+    Ok(())
+}
+
+// 
 // Data Validators
 //
 #[derive(Accounts)]
@@ -49,7 +57,20 @@ pub struct CreateAccount<'info> {
     pub system_program: Program<'info, System>,
 }
 
-//
+#[derive(Accounts)]
+pub struct DeleteAccount<'info> {
+    // Create account of type Creator and assign creators's pubkey as the payer
+    #[account(mut, seeds=[authority.key().as_ref(), b"creator"], bump=creator.bump, close=authority)]
+    pub creator: Account<'info, Creator>,
+
+    // Define user as mutable - money in their account, profile data, etc.
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+// 
 // Data Structures
 //
 #[account]

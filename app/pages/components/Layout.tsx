@@ -44,8 +44,10 @@ const Layout: FC = (props) => {
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <Navbar />
-          
-          <main data-theme="light" className="h-screen">{children}</main>
+
+          <main data-theme="light" className="h-screen">
+            {children}
+          </main>
 
           {/* Footer */}
         </WalletModalProvider>

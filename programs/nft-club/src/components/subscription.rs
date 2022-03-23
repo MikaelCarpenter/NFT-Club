@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::Token;
 use crate::*;
-use anchor_spl::token::{Token, Transfer};
 
 // 
 // Endpoints
@@ -8,6 +8,7 @@ use anchor_spl::token::{Token, Transfer};
 pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
     let subscription: &mut Account<Subscription> = &mut ctx.accounts.subscription;
     let user: &Signer = &ctx.accounts.user;
+    let creator_sol_account: &SystemAccount = &ctx.accounts.creator_sol_account;
     let creator: &Account<Creator> = &ctx.accounts.creator;
 
     let clock: Clock = Clock::get().unwrap();
@@ -15,18 +16,23 @@ pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
     // In lamports; equivalent to 0.1 SOL
     let amount_to_pay_in_lamports: u64 = 100000000;
 
-    // Transfer the amount from user to the creator
-    anchor_spl::token::transfer(
-        CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                from: user.to_account_info(),
-                to: creator.to_account_info(),
-                authority: user.to_account_info()
-            }
-        ),
+    // Create transfer instruction to transfer amount 
+    // from user to the creator's SOL account
+    let ix = anchor_lang::solana_program::system_instruction::transfer(
+        user.key, 
+        creator_sol_account.key, 
         amount_to_pay_in_lamports
+    );
+
+    // Transfer the amount
+    anchor_lang::solana_program::program::invoke(
+        &ix,
+        &[
+            user.to_account_info(),
+            creator_sol_account.to_account_info(),
+        ],
     )?;
+
 
     subscription.user = *user.key;
     subscription.creator = creator.key();
@@ -36,27 +42,31 @@ pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
     Ok(())
 }
 
-pub fn update_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
+pub fn update_subscription(ctx: Context<UpdateSubscription>) -> Result<()> {
     let subscription: &mut Account<Subscription> = &mut ctx.accounts.subscription;
     let user: &Signer = &ctx.accounts.user;
-    let creator: &Account<Creator> = &ctx.accounts.creator;
+    let creator_sol_account: &SystemAccount = &ctx.accounts.creator_sol_account;
 
     let clock: Clock = Clock::get().unwrap();
     
     // In lamports; equivalent to 0.1 SOL
     let amount_to_pay_in_lamports: u64 = 100000000;
 
-    // Transfer the amount from user to the creator
-    anchor_spl::token::transfer(
-        CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                from: user.to_account_info(),
-                to: creator.to_account_info(),
-                authority: user.to_account_info()
-            }
-        ),
+    // Create transfer instruction to transfer amount 
+    // from user to the creator's SOL account
+    let ix = anchor_lang::solana_program::system_instruction::transfer(
+        user.key, 
+        creator_sol_account.key, 
         amount_to_pay_in_lamports
+    );
+
+    // Transfer the amount
+    anchor_lang::solana_program::program::invoke(
+        &ix,
+        &[
+            user.to_account_info(),
+            creator_sol_account.to_account_info(),
+        ],
     )?;
 
     // Set it to expire after 30 days
@@ -88,13 +98,17 @@ pub struct CreateSubscription<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    // Creator
+    // Creator wallet address
     #[account(mut)]
+    pub creator_sol_account: SystemAccount<'info>,
+
+    // Creator account (created by PDA)
     pub creator: Account<'info, Creator>,
 
     // Ensure System Program is the official one from Solana
     pub system_program: Program<'info, System>,
 
+    // Ensure Token Program is the official one from Solana
     pub token_program: Program<'info, Token>,
 }
 
@@ -110,8 +124,11 @@ pub struct UpdateSubscription<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    // Creator
+    // Creator wallet address
     #[account(mut)]
+    pub creator_sol_account: SystemAccount<'info>,
+
+    // Creator account (created by PDA)
     pub creator: Account<'info, Creator>,
 
     // Ensure the subscription is not expired before updating
@@ -122,6 +139,7 @@ pub struct UpdateSubscription<'info> {
     // Ensure System Program is the official one from Solana
     pub system_program: Program<'info, System>,
 
+    // Ensure Token Program is the official one from Solana
     pub token_program: Program<'info, Token>,
 }
 

@@ -29,6 +29,7 @@ const Home: NextPage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [creator, setCreator] = useState<ProgramAccount | null>(null);
 
+  // TODO: use this creator landing page
   const program = useMemo(() => {
     if (connectedWallet) {
       const provider = new anchor.Provider(connection, connectedWallet, OPTS);

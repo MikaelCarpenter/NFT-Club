@@ -1,7 +1,35 @@
 // benefit box component
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useState } from 'react';
+import * as anchor from '@project-serum/anchor';
+import { NftClub } from '../target/types/nft_club';
+import { Program } from '@project-serum/anchor';
+import { useRouter } from 'next/router'
+
+/*
+  1.fetch a creator account
+  2. fetch each benefit account for the creator account
+  3. display the info by default (use state and render)
+
+  4. user needs to connect their wallet
+  5. if they are a subscriber we need to connect them to the benefits
+  6. if they are not a subscriber, give them a button to let them subscribe and do the transaction
+
+
+*/
+// TODO get upload keypair from target/deploy
+
+const fetchCreatorAccount = async () => {
+
+  const creatorAccount = await program.account.creator.fetch(creatorPubKey);
+
+}
+
 
 const creatorLandingPage = () => {
+  // const [creatorName, setCreatorName] = useState<string>('NAME');
+  
+
   return (
     <div>
       <div className="text-center">

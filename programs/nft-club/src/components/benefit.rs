@@ -119,12 +119,10 @@ pub struct DeleteBenefit<'info> {
 pub struct UpdateBenefit<'info> {
     // Update account of type Benefit and assign creator's pubkey as the payer
     #[account(
-        init, 
+        mut, 
         // seeded with creatorPubKey + benefit_number + "benefit".
         seeds = [creator.key().as_ref(), b"benefit", benefit_number.as_ref()], 
-        bump, 
-        payer = authority, 
-        space = Benefit::LEN
+        bump=benefit.bump, 
     )]
     pub benefit: Account<'info, Benefit>,
 
@@ -135,7 +133,6 @@ pub struct UpdateBenefit<'info> {
     pub creator: Account<'info, Creator>,
 
     // Define user as mutable - money in their account, description
-    #[account(mut)]
     pub authority: Signer<'info>,
 
     // Ensure System Program is the official one from Solana and handle errors

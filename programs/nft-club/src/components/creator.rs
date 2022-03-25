@@ -51,9 +51,9 @@ pub fn update_account(
     creator.username = username;
     creator.email = email;
     creator.description = description;
-    creator.bump = *ctx.bumps.get("creator").unwrap();
+    // creator.bump = *ctx.bumps.get("creator").unwrap();
 
-    creator.bump = *ctx.bumps.get("creator").unwrap();
+    // creator.bump = *ctx.bumps.get("creator").unwrap();
 
     Ok(())
 }
@@ -98,11 +98,10 @@ pub struct DeleteAccount<'info> {
 pub struct UpdateAccount<'info> {
     // Create account of type Creator and assign creators's pubkey as the payer
     // seeded with creatorWalletPubKey + "creator"
-    #[account(init, has_one=authority, seeds=[authority.key().as_ref(), b"creator"], bump, payer = authority, space = Creator::LEN)]
+    #[account(mut, has_one=authority, seeds=[authority.key().as_ref(), b"creator"], bump=creator.bump)]
     pub creator: Account<'info, Creator>,
 
     // Define user as mutable - money in their account, profile data, etc.
-    #[account(mut)]
     pub authority: Signer<'info>,
 
     // Ensure System Program is the official one from Solana and handle errors

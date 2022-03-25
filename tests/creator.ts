@@ -24,11 +24,6 @@ describe('Creator', () => {
 
   describe('creation', () => {
     afterEach(async () => {
-      const creatorSeeds = [
-        creatorsWalletKeypair.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('creator'),
-      ];
-
       const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
         creatorSeeds,
         program.programId
@@ -52,8 +47,6 @@ describe('Creator', () => {
       );
       const txnSigners = [];
       await program.provider.send(txn, txnSigners);
-
-      console.log('Finished sending transaction');
 
       // Check if wallet balance is same as original after deletion
       const balanceAfterDeletion = await connection.getBalance(
@@ -211,7 +204,7 @@ describe('Creator', () => {
 
   describe('update', () => {
     // Create account
-    beforeEach(async () => {
+    before(async () => {
       originalBalance = await connection.getBalance(
         creatorsWalletKeypair.publicKey
       );
@@ -233,11 +226,6 @@ describe('Creator', () => {
         }
       );
 
-      balanceAfterCreation = await connection.getBalance(
-        creatorsWalletKeypair.publicKey
-      );
-      expect(balanceAfterCreation).to.be.below(originalBalance);
-
       const creatorAccount = await program.account.creator.fetch(creatorPubKey);
 
       assert.equal(creatorAccount.username, 'testUsername');
@@ -251,12 +239,7 @@ describe('Creator', () => {
     })
 
     // Delete account
-    afterEach(async () => {
-      const creatorSeeds = [
-        creatorsWalletKeypair.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('creator'),
-      ];
-
+    after(async () => {
       const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
         creatorSeeds,
         program.programId
@@ -278,14 +261,6 @@ describe('Creator', () => {
       const txnSigners = [];
       await program.provider.send(txn, txnSigners);
 
-      console.log('Finished sending transaction');
-
-      // Check if wallet balance is same as original after deletion
-      const balanceAfterDeletion = await connection.getBalance(
-        creatorsWalletKeypair.publicKey
-      );
-      assert.equal(balanceAfterDeletion, originalBalance - 10000);
-
       // Fetch Creator and check that it no longer exists
       try {
         const deletedCreator = await program.account.creator.fetch(
@@ -299,12 +274,7 @@ describe('Creator', () => {
       }
     });
 
-    it("changes a Creator's data given its seeds", async () => {
-      const creatorSeeds = [
-        creatorsWalletKeypair.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('creator'),
-      ];
-
+    it("updates a Creator's data given its seeds", async () => {
       const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
         creatorSeeds,
         program.programId
@@ -333,8 +303,6 @@ describe('Creator', () => {
       const txnSigners = [];
       await program.provider.send(txn, txnSigners);
 
-      console.log("SENT TXN");
-
       const updatedAccount = await program.account.creator.fetch(creatorPubKey);
 
       assert.equal(updatedAccount.username, 'updatedUsername');
@@ -344,6 +312,108 @@ describe('Creator', () => {
       assert.notEqual(creatorAccount.username, updatedAccount.username)
       assert.notEqual(creatorAccount.email, updatedAccount.email)
       assert.notEqual(creatorAccount.description, updatedAccount.description)
+    });
+
+    it('cannot update a Creator with username over 42 characters', async () => {
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      const creatorAccount = await program.account.creator.fetch(creatorPubKey);
+
+      try {
+        await program.rpc.updateAccount(
+          'x'.repeat(43),
+          'updated@email.com',
+          'updated description',
+          {
+            accounts: {
+              creator: creatorPubKey,
+              authority: creatorsWalletKeypair.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+          }
+        );
+      } catch (error) {
+        assert.equal(
+          error.msg,
+          'The provided Creator username should be 42 characters long maximum.'
+        );
+        return;
+      }
+
+      assert.fail(
+        'The instruction should have failed with a 43-character username'
+      );
+    });
+
+    it('cannot update a Creator with email over 42 characters', async () => {
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      const creatorAccount = await program.account.creator.fetch(creatorPubKey);
+
+      try {
+        await program.rpc.updateAccount(
+          'updatedUsername',
+          'x'.repeat(43),
+          'updated description',
+          {
+            accounts: {
+              creator: creatorPubKey,
+              authority: creatorsWalletKeypair.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+          }
+        );
+      } catch (error) {
+        assert.equal(
+          error.msg,
+          'The provided Creator email should be 42 characters long maximum.'
+        );
+        return;
+      }
+
+      assert.fail(
+        'The instruction should have failed with a 43-character email'
+      );
+    });
+
+    it('cannot update a Creator with description over 420 characters', async () => {
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      const creatorAccount = await program.account.creator.fetch(creatorPubKey);
+
+      try {
+        await program.rpc.updateAccount(
+          'updatedUsername',
+          'updated@email.com',
+          'x'.repeat(421),
+          {
+            accounts: {
+              creator: creatorPubKey,
+              authority: creatorsWalletKeypair.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+          }
+        );
+      } catch (error) {
+        assert.equal(
+          error.msg,
+          'The provided Creator description should be 420 characters long maximum.'
+        );
+        return;
+      }
+
+      assert.fail(
+        'The instruction should have failed with a 421-character description'
+      );
     });
   });
 

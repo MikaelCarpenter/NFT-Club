@@ -116,8 +116,10 @@ const SignUp = () => {
           }
         )
       );
+
     }
 
+    router.push('/creator-hub');
     await program!.provider.send(txn, []);
 
     router.push('/creator-hub');

@@ -23,6 +23,11 @@ const connection = new anchor.web3.Connection(
   OPTS.preflightCommitment
 );
 
+interface FetchSubsReturn {
+  subscriptions: Record<string, unknown>[];
+  isSubscribed: Record<string, boolean>;
+}
+
 const Home: NextPage = () => {
   const router = useRouter();
   const connectedWallet = useAnchorWallet();
@@ -73,7 +78,7 @@ const Home: NextPage = () => {
     async (
       nftClubProgram: anchor.Program<NftClub>,
       wallet: AnchorWallet
-    ): Promise<Record<string, unknown>[]> => {
+    ): Promise<FetchSubsReturn> => {
       const subscriptions = await nftClubProgram.account.subscription.all([
         {
           memcmp: {
@@ -83,8 +88,12 @@ const Home: NextPage = () => {
         },
       ]);
 
-      return await Promise.all(
+      const isSubscribed: Record<string, boolean> = {};
+
+      const newSubscriptions = await Promise.all(
         subscriptions.map((subscription) => {
+          isSubscribed[subscription.account.creator.toString()] = true;
+
           return (async () => {
             // Fetch the creator to which this subscription belongs.
             const creator = await nftClubProgram.account.creator.fetch(
@@ -118,6 +127,11 @@ const Home: NextPage = () => {
           })();
         })
       );
+
+      return {
+        subscriptions: newSubscriptions,
+        isSubscribed,
+      };
     },
     []
   );
@@ -128,15 +142,14 @@ const Home: NextPage = () => {
         nftClubProgram,
         wallet
       );
-      const subscriptions = await fetchSubscriptionsForUserWallet(
-        nftClubProgram,
-        wallet
-      );
+      const { subscriptions, isSubscribed } =
+        await fetchSubscriptionsForUserWallet(nftClubProgram, wallet);
 
       (creator || subscriptions.length) &&
         setUser({
           subscriptions,
           creatorAccount: creator,
+          isSubscribed,
         });
 
       setIsLoading(false);

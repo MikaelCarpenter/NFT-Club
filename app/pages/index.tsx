@@ -9,7 +9,7 @@ import { ConfirmOptions } from '@solana/web3.js';
 import { IDL, NftClub } from '../../target/types/nft_club';
 
 const PROGRAM_ID = new anchor.web3.PublicKey(
-  '6dND1tHXuvCzB9Fe88FvnrZEqTVraPWGxtR5HQs4Z3dx'
+  'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
 );
 
 const OPTS = {
@@ -30,6 +30,7 @@ const Home: NextPage = () => {
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // TODO: use this creator landing page
   const program = useMemo(() => {
     if (connectedWallet) {
       const provider = new anchor.Provider(connection, connectedWallet, OPTS);
@@ -159,10 +160,10 @@ const Home: NextPage = () => {
   }
 
   return (
-    <div className="flex h-full items-center justify-center">
-      <div className="mb-16 flex flex-col items-center">
+    <div className="flex items-center justify-center h-full">
+      <div className="flex flex-col items-center mb-16">
         <div className="flex">
-          <div className="prose flex flex-1 items-center justify-center">
+          <div className="flex items-center justify-center flex-1 prose">
             <h1 className="text-center">
               Welcome
               <br />
@@ -174,7 +175,7 @@ const Home: NextPage = () => {
               </span>
             </h1>
           </div>
-          <div className="prose flex flex-1 items-center justify-center">
+          <div className="flex items-center justify-center flex-1 prose">
             <p className="p-8 text-center">
               Here's a big mass of text. Cool... Here's a big mass of text.
               Cool...Here's a big mass of text. Cool...Here's a big mass of

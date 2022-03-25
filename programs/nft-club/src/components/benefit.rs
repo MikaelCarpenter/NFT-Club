@@ -48,7 +48,6 @@ pub fn update_benefit(
     benefit.authority = *authority.key;
     benefit.name = name;
     benefit.description = description;
-    benefit.bump = *ctx.bumps.get("benefit").unwrap();
 
     Ok(())
 }
@@ -137,11 +136,6 @@ pub struct UpdateBenefit<'info> {
 
     // Ensure System Program is the official one from Solana and handle errors
     #[account(constraint = description.chars().count() <= 420 @ errors::ErrorCode::BenefitDescriptionTooLong)]
-    // Ensure benefit_number == num_benefits + 1
-    #[account(
-        constraint = benefit_number.parse::<u8>().unwrap() == creator.num_benefits + 1 
-        @ errors::ErrorCode::BenefitNumberInvalid
-    )]
     pub system_program: Program<'info, System>,
 }
 

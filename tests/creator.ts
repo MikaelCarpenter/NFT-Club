@@ -236,7 +236,7 @@ describe('Creator', () => {
         creatorAccount.authority.toBase58(),
         creatorsWalletKeypair.publicKey.toBase58()
       );
-    })
+    });
 
     // Delete account
     after(async () => {
@@ -309,9 +309,9 @@ describe('Creator', () => {
       assert.equal(updatedAccount.email, 'updated@email.com');
       assert.equal(updatedAccount.description, 'updated description');
 
-      assert.notEqual(creatorAccount.username, updatedAccount.username)
-      assert.notEqual(creatorAccount.email, updatedAccount.email)
-      assert.notEqual(creatorAccount.description, updatedAccount.description)
+      assert.notEqual(creatorAccount.username, updatedAccount.username);
+      assert.notEqual(creatorAccount.email, updatedAccount.email);
+      assert.notEqual(creatorAccount.description, updatedAccount.description);
     });
 
     it('cannot update a Creator with username over 42 characters', async () => {

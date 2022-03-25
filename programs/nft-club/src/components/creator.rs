@@ -42,18 +42,13 @@ pub fn update_account(
     description: String,
 ) -> Result<()> {
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
-    let authority: &Signer = &ctx.accounts.authority;
     msg!("username: {}", username);
     msg!("email: {}", email);
     msg!("description: {}", description);
 
-    creator.authority = *authority.key;
     creator.username = username;
     creator.email = email;
     creator.description = description;
-    // creator.bump = *ctx.bumps.get("creator").unwrap();
-
-    // creator.bump = *ctx.bumps.get("creator").unwrap();
 
     Ok(())
 }

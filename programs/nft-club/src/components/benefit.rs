@@ -43,9 +43,7 @@ pub fn update_benefit(
     _benefit_number: String
 ) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
-    let authority: &Signer = &ctx.accounts.authority;
 
-    benefit.authority = *authority.key;
     benefit.name = name;
     benefit.description = description;
 

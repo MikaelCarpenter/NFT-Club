@@ -9,6 +9,7 @@ import {
 import * as anchor from '@project-serum/anchor';
 import { ConfirmOptions } from '@solana/web3.js';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { useRouter } from 'next/router';
 
 import IDL from '../../target/idl/nft_club.json';
 
@@ -30,6 +31,8 @@ const SignUp = () => {
   const usernameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
+  const router = useRouter();
 
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
@@ -122,8 +125,10 @@ const SignUp = () => {
           // No signers necessary: wallet and pda are implicit
         })
       );
+
     }
 
+    router.push('/creator-hub');
     await program!.provider.send(txn, []);
   }, [benefitRefs]);
 

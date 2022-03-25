@@ -58,11 +58,15 @@ const Home: NextPage = () => {
   };
 
   useEffect(() => {
+    if (connectedWallet && program && creator) {
+      router.push('creator-hub');
+    }
+
     if (connectedWallet && program) {
       setIsLoading(true);
       getCreatorAccountForUserWallet(program, connectedWallet);
     }
-  }, [connectedWallet, program]);
+  }, [connectedWallet, program, creator, router]);
 
   const handleBecomeCreator = useCallback(() => {
     router.push('/sign-up');

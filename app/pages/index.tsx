@@ -158,6 +158,10 @@ const Home: NextPage = () => {
   );
 
   useEffect(() => {
+    if (connectedWallet && program && fetchUserDetails) {
+      router.push('creator-hub');
+    }
+
     if (connectedWallet && program) {
       setIsLoading(true);
       fetchUserDetails(program, connectedWallet);

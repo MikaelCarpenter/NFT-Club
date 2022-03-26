@@ -62,7 +62,7 @@ const Home: NextPage = () => {
       router.push('creator-hub');
     }
 
-    if (connectedWallet && program) {
+    else if (connectedWallet && program) {
       setIsLoading(true);
       getCreatorAccountForUserWallet(program, connectedWallet);
     }

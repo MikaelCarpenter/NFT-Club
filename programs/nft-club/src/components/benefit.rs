@@ -36,6 +36,20 @@ pub fn delete_benefit(ctx: Context<DeleteBenefit>,  _benefit_number: String) -> 
     Ok(())
 }
 
+pub fn update_benefit(
+    ctx: Context<UpdateBenefit>, 
+    name: String, 
+    description: String, 
+    _benefit_number: String
+) -> Result<()> {
+    let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
+
+    benefit.name = name;
+    benefit.description = description;
+
+    Ok(())
+}
+
 // 
 // Data Validators
 // 
@@ -94,6 +108,32 @@ pub struct DeleteBenefit<'info> {
     pub authority: Signer<'info>,
 
     // Ensure System Program is the official one from Solana and handle errors
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(name: String, description: String, benefit_number: String)]
+pub struct UpdateBenefit<'info> {
+    // Update account of type Benefit and assign creator's pubkey as the payer
+    #[account(
+        mut, 
+        // seeded with creatorPubKey + benefit_number + "benefit".
+        seeds = [creator.key().as_ref(), b"benefit", benefit_number.as_ref()], 
+        bump=benefit.bump, 
+    )]
+    pub benefit: Account<'info, Benefit>,
+
+    // Guarantee that account is both signed by authority
+    // and that &creator.authority == authority.key
+    // In other words, signer must have a creator account to create a benefit
+    #[account(mut, has_one = authority)]
+    pub creator: Account<'info, Creator>,
+
+    // Define user as mutable - money in their account, description
+    pub authority: Signer<'info>,
+
+    // Ensure System Program is the official one from Solana and handle errors
+    #[account(constraint = description.chars().count() <= 420 @ errors::ErrorCode::BenefitDescriptionTooLong)]
     pub system_program: Program<'info, System>,
 }
 

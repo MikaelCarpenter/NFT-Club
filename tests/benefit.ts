@@ -499,7 +499,7 @@ describe('Benefit', () => {
       try {
         await program.provider.send(txn, []);
       } catch (error) {
-        console.log('ERROR: ', error);
+        console.log('ERROR: ', error.logs);
         assert.equal(
           error.msg,
           'The provided Benefit description should be 420 characters long maximum.'

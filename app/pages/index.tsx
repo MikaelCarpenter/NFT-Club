@@ -12,8 +12,150 @@ const Home: NextPage = () => {
 
   const { isLoading, subscriptions } = user;
 
+<<<<<<< HEAD
   if (connectedWallet && isLoading) {
     return <Loading />;
+=======
+  // TODO: use this creator landing page
+  const program = useMemo(() => {
+    if (connectedWallet) {
+      const provider = new anchor.Provider(connection, connectedWallet, OPTS);
+
+      return new anchor.Program<NftClub>(
+        IDL as unknown as NftClub,
+        PROGRAM_ID,
+        provider
+      );
+    }
+    return null;
+  }, [connectedWallet]);
+
+  const getCreatorAccountForUserWallet = useCallback(
+    async (
+      nftClubProgram: anchor.Program<NftClub>,
+      wallet: AnchorWallet
+    ): Promise<Record<string, unknown> | null> => {
+      const creatorSeeds = [
+        wallet.publicKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode('creator'),
+      ];
+
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        nftClubProgram.programId
+      );
+
+      try {
+        return await nftClubProgram.account.creator.fetch(creatorPubKey);
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    },
+    []
+  );
+
+  const fetchSubscriptionsForUserWallet = useCallback(
+    async (
+      nftClubProgram: anchor.Program<NftClub>,
+      wallet: AnchorWallet
+    ): Promise<FetchSubsReturn> => {
+      const subscriptions = await nftClubProgram.account.subscription.all([
+        {
+          memcmp: {
+            offset: 8,
+            bytes: wallet.publicKey.toBase58(),
+          },
+        },
+      ]);
+
+      const isSubscribed: Record<string, boolean> = {};
+
+      const newSubscriptions = await Promise.all(
+        subscriptions.map((subscription) => {
+          isSubscribed[subscription.account.creator.toString()] = true;
+
+          return (async () => {
+            // Fetch the creator to which this subscription belongs.
+            const creator = await nftClubProgram.account.creator.fetch(
+              subscription.account.creator
+            );
+
+            // Fetch all benefit keys of this creator.
+            const benefitPubKeys = await Promise.all(
+              Array(creator.numBenefits)
+                .fill(0)
+                .map((id) =>
+                  anchor.web3.PublicKey.findProgramAddress(
+                    [
+                      creator.authority.toBuffer(),
+                      anchor.utils.bytes.utf8.encode('benefit'),
+                      anchor.utils.bytes.utf8.encode(`${id + 1}`),
+                    ],
+                    nftClubProgram.programId
+                  )
+                )
+            );
+
+            // Fetch all benefits of this creator.
+            const benefits = await Promise.all(
+              benefitPubKeys.map(([pubKey]) =>
+                nftClubProgram.account.benefit.fetch(pubKey)
+              )
+            );
+
+            return { ...subscription, creator, benefits };
+          })();
+        })
+      );
+
+      return {
+        subscriptions: newSubscriptions,
+        isSubscribed,
+      };
+    },
+    []
+  );
+
+  const fetchUserDetails = useCallback(
+    async (nftClubProgram: anchor.Program<NftClub>, wallet: AnchorWallet) => {
+      const creator = await getCreatorAccountForUserWallet(
+        nftClubProgram,
+        wallet
+      );
+      const { subscriptions, isSubscribed } =
+        await fetchSubscriptionsForUserWallet(nftClubProgram, wallet);
+
+      (creator || subscriptions.length) &&
+        setUser({
+          subscriptions,
+          creatorAccount: creator,
+          isSubscribed,
+        });
+
+      setIsLoading(false);
+    },
+    [getCreatorAccountForUserWallet, fetchSubscriptionsForUserWallet, setUser]
+  );
+
+  useEffect(() => {
+    if (connectedWallet && program && fetchUserDetails) {
+      router.push('creator-hub');
+    }
+
+    else if (connectedWallet && program) {
+      setIsLoading(true);
+      fetchUserDetails(program, connectedWallet);
+    }
+  }, [connectedWallet, program, fetchUserDetails]);
+
+  const handleBecomeCreator = useCallback(() => {
+    router.push('/sign-up');
+  }, [router]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+>>>>>>> 4dc1f08 (progress on creator hub)
   }
 
   return (

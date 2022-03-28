@@ -1,9 +1,11 @@
 import { createContext, useContext } from 'react';
+import { Creator } from '../types/Creator';
 
 export interface User {
-  creatorAccount: Record<string, unknown> | null;
-  subscriptions: Record<string, Record<string, unknown>>;
   isLoading: boolean;
+  creatorAccount: Creator | null;
+  // TODO: Actually type this or think of better data structure
+  subscriptions: Record<string, Record<string, unknown>>;
 }
 
 export interface UserState {

@@ -11,6 +11,8 @@ import {
 import { IDL, NftClub } from '../../target/types/nft_club';
 import { User, UserContext } from '../hooks/userUser';
 import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
+import { Creator } from '../types/Creator';
+import { Subscription } from '../types/Subscription';
 
 export interface UserProviderProps {
   children: ReactNode;
@@ -42,7 +44,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
     async (
       nftClubProgram: anchor.Program<NftClub>,
       wallet: AnchorWallet
-    ): Promise<Record<string, unknown> | null> => {
+    ): Promise<Creator | null> => {
       const creatorSeeds = [
         wallet.publicKey.toBuffer(),
         anchor.utils.bytes.utf8.encode('creator'),
@@ -54,7 +56,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
       );
 
       try {
-        return await nftClubProgram.account.creator.fetch(creatorPubKey);
+        return await nftClubProgram.account.creator.fetch(creatorPubKey) as Creator;
       } catch (error) {
         console.error(error);
         return null;
@@ -114,10 +116,10 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
         })
       );
 
-      const subscriptionsMap: Record<string, Record<string, unknown>> = {};
+      const subscriptionsMap: Record<string, Record<string, unknown>> = {}
 
       newSubscriptions.forEach((sub) => {
-        subscriptionsMap[sub.account.creator.toBase58()] = sub;
+        subscriptionsMap[sub.account.creator.toBase58()] = sub.account;
       });
 
       return subscriptionsMap;

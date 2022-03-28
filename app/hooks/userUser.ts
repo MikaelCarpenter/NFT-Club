@@ -1,7 +1,8 @@
 import { createContext, useContext } from 'react';
+import { CreatorAccount } from '../types/CreatorAccount';
 
 export interface User {
-  creatorAccount: Record<string, unknown> | null;
+  creatorAccount: CreatorAccount | null;
   subscriptions: Record<string, unknown>[];
   isSubscribed: Record<string, boolean>;
 }

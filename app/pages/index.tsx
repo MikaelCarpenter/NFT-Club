@@ -7,6 +7,7 @@ import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useUser } from '../hooks/userUser';
 import { ConfirmOptions } from '@solana/web3.js';
 import { IDL, NftClub } from '../../target/types/nft_club';
+import { CreatorAccount } from '../types/CreatorAccount';
 
 const PROGRAM_ID = new anchor.web3.PublicKey(
   'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
@@ -148,7 +149,7 @@ const Home: NextPage = () => {
       (creator || subscriptions.length) &&
         setUser({
           subscriptions,
-          creatorAccount: creator,
+          creatorAccount: creator as CreatorAccount,
           isSubscribed,
         });
 
@@ -158,11 +159,7 @@ const Home: NextPage = () => {
   );
 
   useEffect(() => {
-    if (connectedWallet && program && fetchUserDetails) {
-      router.push('creator-hub');
-    }
-
-    else if (connectedWallet && program) {
+    if (connectedWallet && program) {
       setIsLoading(true);
       fetchUserDetails(program, connectedWallet);
     }
@@ -177,10 +174,10 @@ const Home: NextPage = () => {
   }
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="flex flex-col items-center mb-16">
+    <div className="flex h-full items-center justify-center">
+      <div className="mb-16 flex flex-col items-center">
         <div className="flex">
-          <div className="flex items-center justify-center flex-1 prose">
+          <div className="prose flex flex-1 items-center justify-center">
             <h1 className="text-center">
               Welcome
               <br />
@@ -192,7 +189,7 @@ const Home: NextPage = () => {
               </span>
             </h1>
           </div>
-          <div className="flex items-center justify-center flex-1 prose">
+          <div className="prose flex flex-1 items-center justify-center">
             <p className="p-8 text-center">
               Here's a big mass of text. Cool... Here's a big mass of text.
               Cool...Here's a big mass of text. Cool...Here's a big mass of

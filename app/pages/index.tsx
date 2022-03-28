@@ -1,72 +1,176 @@
 import * as anchor from '@project-serum/anchor';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
-import { ConfirmOptions } from '@solana/web3.js';
-import { ProgramAccount } from '@project-serum/anchor';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
-
-import IDL from '../../target/idl/nft_club.json';
+import { useUser } from '../hooks/userUser';
+import { ConfirmOptions } from '@solana/web3.js';
+import { IDL, NftClub } from '../../target/types/nft_club';
 
 const PROGRAM_ID = new anchor.web3.PublicKey(
   'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
 );
+
 const OPTS = {
   preflightCommitment: 'processed',
 } as ConfirmOptions;
 
 const endpoint = 'https://api.devnet.solana.com';
+
 const connection = new anchor.web3.Connection(
   endpoint,
   OPTS.preflightCommitment
 );
 
+interface FetchSubsReturn {
+  subscriptions: Record<string, unknown>[];
+  isSubscribed: Record<string, boolean>;
+}
+
 const Home: NextPage = () => {
   const router = useRouter();
   const connectedWallet = useAnchorWallet();
+  const { user, setUser } = useUser();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [creator, setCreator] = useState<ProgramAccount | null>(null);
 
   // TODO: use this creator landing page
   const program = useMemo(() => {
     if (connectedWallet) {
       const provider = new anchor.Provider(connection, connectedWallet, OPTS);
 
-      return new anchor.Program(IDL as anchor.Idl, PROGRAM_ID, provider);
+      return new anchor.Program<NftClub>(
+        IDL as unknown as NftClub,
+        PROGRAM_ID,
+        provider
+      );
     }
-
     return null;
   }, [connectedWallet]);
 
-  const getCreatorAccountForUserWallet = async (
-    nftClubProgram: anchor.Program,
-    wallet: AnchorWallet
-  ) => {
-    const [creator] = await nftClubProgram.account.creator.all([
-      {
-        memcmp: {
-          offset: 8, // Discriminator.
-          bytes: wallet.publicKey.toBase58(),
-        },
-      },
-    ]);
+  const getCreatorAccountForUserWallet = useCallback(
+    async (
+      nftClubProgram: anchor.Program<NftClub>,
+      wallet: AnchorWallet
+    ): Promise<Record<string, unknown> | null> => {
+      const creatorSeeds = [
+        wallet.publicKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode('creator'),
+      ];
 
-    if (creator) setCreator(creator);
-    setIsLoading(false);
-  };
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        nftClubProgram.programId
+      );
+
+      try {
+        return await nftClubProgram.account.creator.fetch(creatorPubKey);
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    },
+    []
+  );
+
+  const fetchSubscriptionsForUserWallet = useCallback(
+    async (
+      nftClubProgram: anchor.Program<NftClub>,
+      wallet: AnchorWallet
+    ): Promise<FetchSubsReturn> => {
+      const subscriptions = await nftClubProgram.account.subscription.all([
+        {
+          memcmp: {
+            offset: 8,
+            bytes: wallet.publicKey.toBase58(),
+          },
+        },
+      ]);
+
+      const isSubscribed: Record<string, boolean> = {};
+
+      const newSubscriptions = await Promise.all(
+        subscriptions.map((subscription) => {
+          isSubscribed[subscription.account.creator.toString()] = true;
+
+          return (async () => {
+            // Fetch the creator to which this subscription belongs.
+            const creator = await nftClubProgram.account.creator.fetch(
+              subscription.account.creator
+            );
+
+            // Fetch all benefit keys of this creator.
+            const benefitPubKeys = await Promise.all(
+              Array(creator.numBenefits)
+                .fill(0)
+                .map((id) =>
+                  anchor.web3.PublicKey.findProgramAddress(
+                    [
+                      creator.authority.toBuffer(),
+                      anchor.utils.bytes.utf8.encode('benefit'),
+                      anchor.utils.bytes.utf8.encode(`${id + 1}`),
+                    ],
+                    nftClubProgram.programId
+                  )
+                )
+            );
+
+            // Fetch all benefits of this creator.
+            const benefits = await Promise.all(
+              benefitPubKeys.map(([pubKey]) =>
+                nftClubProgram.account.benefit.fetch(pubKey)
+              )
+            );
+
+            return { ...subscription, creator, benefits };
+          })();
+        })
+      );
+
+      return {
+        subscriptions: newSubscriptions,
+        isSubscribed,
+      };
+    },
+    []
+  );
+
+  const fetchUserDetails = useCallback(
+    async (nftClubProgram: anchor.Program<NftClub>, wallet: AnchorWallet) => {
+      const creator = await getCreatorAccountForUserWallet(
+        nftClubProgram,
+        wallet
+      );
+      const { subscriptions, isSubscribed } =
+        await fetchSubscriptionsForUserWallet(nftClubProgram, wallet);
+
+      (creator || subscriptions.length) &&
+        setUser({
+          subscriptions,
+          creatorAccount: creator,
+          isSubscribed,
+        });
+
+      setIsLoading(false);
+    },
+    [getCreatorAccountForUserWallet, fetchSubscriptionsForUserWallet, setUser]
+  );
 
   useEffect(() => {
     if (connectedWallet && program) {
       setIsLoading(true);
-      getCreatorAccountForUserWallet(program, connectedWallet);
+      fetchUserDetails(program, connectedWallet);
     }
-  }, [connectedWallet, program]);
+  }, [connectedWallet, program, fetchUserDetails]);
 
   const handleBecomeCreator = useCallback(() => {
     router.push('/sign-up');
   }, [router]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="flex items-center justify-center h-full">
@@ -99,12 +203,32 @@ const Home: NextPage = () => {
         </div>
         {!connectedWallet ? (
           <WalletMultiButton className="btn btn-primary" />
-        ) : creator ? (
-          <p>CREATOR FOUND</p>
-        ) : (
-          <button className="btn btn-primary" onClick={handleBecomeCreator}>
-            Become a Creator
+        ) : user.creatorAccount ? (
+          <button
+            className="btn btn-primary"
+            onClick={() => router.push('/creator-hub')}
+          >
+            Visit Creator Hub
           </button>
+        ) : (
+          <div>
+            <button className="btn btn-primary" onClick={handleBecomeCreator}>
+              Become a Creator
+            </button>
+            <br />
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                user.subscriptions.length
+                  ? router.push('/subscription-hub')
+                  : router.push('/creator-landing-page');
+              }}
+            >
+              {user.subscriptions.length
+                ? 'See my subsriptions'
+                : 'Subscribe to a creator'}
+            </button>
+          </div>
         )}
       </div>
     </div>

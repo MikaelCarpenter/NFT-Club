@@ -5,23 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useUser } from '../hooks/userUser';
-import { ConfirmOptions } from '@solana/web3.js';
 import { IDL, NftClub } from '../../target/types/nft_club';
-
-const PROGRAM_ID = new anchor.web3.PublicKey(
-  'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
-);
-
-const OPTS = {
-  preflightCommitment: 'processed',
-} as ConfirmOptions;
-
-const endpoint = 'https://api.devnet.solana.com';
-
-const connection = new anchor.web3.Connection(
-  endpoint,
-  OPTS.preflightCommitment
-);
+import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 
 interface FetchSubsReturn {
   subscriptions: Record<string, unknown>[];
@@ -173,10 +158,10 @@ const Home: NextPage = () => {
   }
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="flex flex-col items-center mb-16">
+    <div className="flex h-full items-center justify-center">
+      <div className="mb-16 flex flex-col items-center">
         <div className="flex">
-          <div className="flex items-center justify-center flex-1 prose">
+          <div className="prose flex flex-1 items-center justify-center">
             <h1 className="text-center">
               Welcome
               <br />
@@ -188,7 +173,7 @@ const Home: NextPage = () => {
               </span>
             </h1>
           </div>
-          <div className="flex items-center justify-center flex-1 prose">
+          <div className="prose flex flex-1 items-center justify-center">
             <p className="p-8 text-center">
               Here's a big mass of text. Cool... Here's a big mass of text.
               Cool...Here's a big mass of text. Cool...Here's a big mass of

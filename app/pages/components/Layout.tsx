@@ -18,6 +18,7 @@ import {
 
 import Navbar from './Navbar';
 import { UserProvider } from '../../contexts/User';
+import { CreatorsProvider } from '../../contexts/Creators';
 
 require('@solana/wallet-adapter-react-ui/styles.css');
 
@@ -45,13 +46,13 @@ const Layout: FC = (props) => {
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <UserProvider>
-            <Navbar />
-
-            <main data-theme="light" className="h-screen">
-              {children}
-            </main>
-
-            {/* Footer */}
+            <CreatorsProvider>
+              <Navbar />
+              <main data-theme="light" className="h-screen">
+                {children}
+              </main>
+              {/* Footer */}
+            </CreatorsProvider>
           </UserProvider>
         </WalletModalProvider>
       </WalletProvider>

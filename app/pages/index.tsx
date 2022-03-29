@@ -218,7 +218,7 @@ const Home: NextPage = () => {
   }, [router]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <progress className="progress w-56 place-content-center"></progress>;
   }
 
   return (

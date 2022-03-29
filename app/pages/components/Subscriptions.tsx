@@ -1,5 +1,10 @@
+import * as anchor from '@project-serum/anchor';
+import { TOKEN_PROGRAM_ID } from '@project-serum/token';
+import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/router';
-import { FC } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
+import { IDL, NftClub } from '../../../target/types/nft_club';
+import { connection, OPTS, PROGRAM_ID } from '../../utils/Connection';
 
 interface SubscriptionsType {
   subscriptions: Record<string, unknown>[];
@@ -7,6 +12,62 @@ interface SubscriptionsType {
 
 const Subscriptions: FC<SubscriptionsType> = ({ subscriptions }) => {
   const router = useRouter();
+
+  const connectedWallet = useAnchorWallet();
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const program = useMemo(() => {
+    if (connectedWallet) {
+      const provider = new anchor.Provider(connection, connectedWallet, OPTS);
+
+      return new anchor.Program<NftClub>(
+        IDL as unknown as NftClub,
+        PROGRAM_ID,
+        provider
+      );
+    }
+    return null;
+  }, [connectedWallet]);
+
+  const updateSubscription = useCallback(
+    async (
+      program: anchor.Program<NftClub>,
+      creatorPubKey: anchor.web3.PublicKey,
+      wallet: AnchorWallet,
+      creatorSolKey: anchor.web3.PublicKey
+    ) => {
+      setIsLoading(true);
+      const subscriptionSeeds = [
+        creatorPubKey.toBuffer(),
+        wallet.publicKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode('subscription'),
+      ];
+      const [subscriptionPubKey] =
+        await anchor.web3.PublicKey.findProgramAddress(
+          subscriptionSeeds,
+          program.programId
+        );
+
+      await program.rpc.updateSubscription({
+        accounts: {
+          subscription: subscriptionPubKey.toBase58(),
+          creator: creatorPubKey.toBase58(),
+          creatorSolAccount: creatorSolKey.toBase58(),
+          user: wallet.publicKey.toBase58(),
+          systemProgram: anchor.web3.SystemProgram.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+      });
+      setIsLoading(false);
+    },
+    []
+  );
+
+  if (isLoading) {
+    return <progress className="progress w-56 place-content-center"></progress>;
+  }
+
   return (
     <div className="prose max-w-none lg:prose-xl">
       <h1 className="px-10">Your Subscriptions</h1>
@@ -42,6 +103,14 @@ const Subscriptions: FC<SubscriptionsType> = ({ subscriptions }) => {
                         );
                         return;
                       }
+                      connectedWallet &&
+                        program &&
+                        updateSubscription(
+                          program,
+                          subscription.creator.account.authority,
+                          connectedWallet,
+                          subscription.creator.publicKey
+                        );
                     }}
                   >
                     {subscriptionExpired ? 'Renew' : 'Access'}

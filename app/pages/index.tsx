@@ -7,7 +7,7 @@ import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useUser } from '../hooks/userUser';
 import { ConfirmOptions } from '@solana/web3.js';
 import { IDL, NftClub } from '../../target/types/nft_club';
-import { CreatorAccount } from '../types/CreatorAccount';
+import { Creator } from '../types/Creator';
 
 const PROGRAM_ID = new anchor.web3.PublicKey(
   'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
@@ -149,7 +149,7 @@ const Home: NextPage = () => {
       (creator || subscriptions.length) &&
         setUser({
           subscriptions,
-          creatorAccount: creator as CreatorAccount,
+          creatorAccount: creator as Creator,
           isSubscribed,
         });
 

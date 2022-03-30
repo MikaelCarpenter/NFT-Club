@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor';
 
-export type CreatorAccount = {
+export type Creator = {
   username: string;
   authority: anchor.BN;
   email: string;

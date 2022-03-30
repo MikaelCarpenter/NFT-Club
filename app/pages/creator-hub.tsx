@@ -104,9 +104,9 @@ const CreatorHub = () => {
   // Do all of this if a creator is found
   // All creator fields are mandatory, so extra checking should not be necessary?: Check this...
   return (
-    <div className="flex h-full w-full flex-col items-center">
+    <div className="flex flex-col items-center w-full h-full">
       {user.creatorAccount && (
-        <div className="prose mb-8 w-3/5 text-center">
+        <div className="w-3/5 mb-8 text-center prose">
           <h2>{user.creatorAccount.username}</h2>
           <div className="flex justify-around">
             <p>Revenue: $80000</p>
@@ -118,11 +118,11 @@ const CreatorHub = () => {
         </div>
       )}
       {benefits && benefits.length > 0 && (
-        <div className="no-scrollbar prose h-2/3 w-1/2 overflow-y-scroll rounded-xl p-2">
+        <div className="w-1/2 p-2 overflow-y-scroll no-scrollbar prose h-2/3 rounded-xl">
           {benefits.map((benefit, index) => (
             <div
               key={`${index + 1}`}
-              className="no-scrollbar m-4 h-1/3 overflow-y-scroll rounded-xl bg-primary p-4 text-white"
+              className="p-4 m-4 overflow-y-scroll text-white no-scrollbar h-1/3 rounded-xl bg-primary"
             >
               <h3 className="text-white">
                 {`${index + 1}`}{' '}
@@ -131,7 +131,7 @@ const CreatorHub = () => {
               <p>{benefit.description}</p>
             </div>
           ))}
-          <div className="no-scrollbar m-4 h-1/3 overflow-y-scroll rounded-xl bg-primary p-4 text-white">
+          <div className="p-4 m-4 overflow-y-scroll text-white no-scrollbar h-1/3 rounded-xl bg-primary">
             <h3>2. Benefit Name</h3>
             <p>
               Benefit description Benefit description Benefit description

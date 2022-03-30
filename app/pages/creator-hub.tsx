@@ -47,38 +47,48 @@ const CreatorHub = () => {
   }, [connectedWallet]);
 
   const getBenefits = useCallback(async () => {
-    const creatorSeeds = [
-      user.creatorAccount.authority.toBuffer(),
-      anchor.utils.bytes.utf8.encode('creator'),
-    ];
-    const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
-      creatorSeeds,
-      program!.programId
-    );
-
-    for (let i = 1; i <= user.creatorAccount.numBenefits; i++) {
-      const benefitNumber = anchor.utils.bytes.utf8.encode(`${i}`);
-      const benefitSeeds = [
-        creatorPubKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('benefit'),
-        benefitNumber,
+    if (connectedWallet && user && user.creatorAccount && program) {
+      const creatorSeeds = [
+        connectedWallet.publicKey.toBuffer(),
+        Buffer.from('creator'),
       ];
-
-      const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
-        benefitSeeds,
-        program!.programId
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
       );
 
-      try {
-        const benefit = await program!.account.benefit.fetch(benefitPubKey);
-        if (benefit) {
-          const benefitsCopy = benefits;
-          benefitsCopy.push(benefit as Benefit);
-          setBenefits(benefitsCopy);
+      console.log(user.creatorAccount);
+
+      const numBenefits = user.creatorAccount.numBenefits;
+
+      const txn = new anchor.web3.Transaction();
+      const benefitPubKeys = [];
+
+      const benefitArray = [];
+      for (let i = 1; i <= user.creatorAccount.numBenefits; i++) {
+        const benefitNumber = `${i}`;
+        const benefitSeeds = [
+          creatorPubKey.toBuffer(),
+          Buffer.from('benefit'),
+          Buffer.from(benefitNumber),
+        ];
+
+        const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+          benefitSeeds,
+          program!.programId
+        );
+
+        try {
+          const benefit = await program!.account.benefit.fetch(benefitPubKey);
+          if (benefit) {
+            console.log(benefit);
+            benefitArray.push(benefit as Benefit);
+          }
+        } catch (error) {
+          console.error(error);
         }
-      } catch (error) {
-        console.error(error);
       }
+      setBenefits(benefitArray);
     }
   }, [user]);
 
@@ -98,28 +108,26 @@ const CreatorHub = () => {
     <div className="flex h-full w-full flex-col items-center">
       {user.creatorAccount && (
         <div className="prose mb-8 w-3/5 text-center">
-          <h2>Name</h2>
+          <h2>{user.creatorAccount.username}</h2>
           <div className="flex justify-around">
             <p>Revenue: $80000</p>
-            <p>Subscribers: 15000</p>
+            {user.subscriptions && (
+              <p>Subscribers: {user.subscriptions.length}</p>
+            )}
           </div>
-          <p>
-            Description Description Description Description Description
-            Description Description Description Description Description
-            Description Description Description Description Description
-            Description Description Description Description{' '}
-          </p>
+          <p>{user.creatorAccount.description}</p>
         </div>
       )}
-      {benefits && (
+      {benefits && benefits.length > 0 && (
         <div className="no-scrollbar prose h-2/3 w-1/2 overflow-y-scroll rounded-xl p-2">
           {benefits.map((benefit, index) => (
             <div
               key={`${index + 1}`}
               className="no-scrollbar m-4 h-1/3 overflow-y-scroll rounded-xl bg-primary p-4 text-white"
             >
-              <h3>
-                {`${index}`} {benefit.name ? benefit.name : `Benefit ${index}`}
+              <h3 className="text-white">
+                {`${index + 1}`}{' '}
+                {benefit.name ? benefit.name : `Benefit ${index + 1}`}
               </h3>
               <p>{benefit.description}</p>
             </div>
@@ -140,74 +148,8 @@ const CreatorHub = () => {
               Benefit description Benefit description Benefit description
               Benefit description Benefit description Benefit description
               Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
             </p>
           </div>
-          <h3>3. Benefit Name</h3>
-          <p>
-            Benefit description Benefit description Benefit descriptioBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionBenefit
-            description Benefit description Benefit descriptionnBenefit
-            description Benefit description Benefit description
-          </p>
         </div>
       )}
     </div>

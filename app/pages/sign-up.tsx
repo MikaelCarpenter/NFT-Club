@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react';
 import * as anchor from '@project-serum/anchor';
+import { ConfirmOptions, PublicKey } from '@solana/web3.js';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/router';
 
@@ -59,7 +60,7 @@ const SignUp = () => {
     // Create account on chain
     const creatorSeeds = [
       connectedWallet!.publicKey.toBuffer(),
-      anchor.utils.bytes.utf8.encode('creator'),
+      Buffer.from('creator'),
     ];
 
     const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -74,7 +75,6 @@ const SignUp = () => {
         username!,
         email!,
         description!,
-        numBenefits,
         {
           accounts: {
             creator: creatorPubKey,
@@ -88,11 +88,11 @@ const SignUp = () => {
 
     // Create Benefit accounts
     for (let i = 0; i < numBenefits; i++) {
-      const benefitNumber = anchor.utils.bytes.utf8.encode(`${i + 1}`);
+      const benefitNumber = `${i + 1}`;
       const benefitSeeds = [
         creatorPubKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('benefit'),
-        benefitNumber,
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
       ];
 
       const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -101,21 +101,26 @@ const SignUp = () => {
       );
 
       txn.add(
-        program!.instruction.createBenefit(benefits[i], benefitNumber, {
-          accounts: {
-            benefit: benefitPubKey,
-            creator: creatorPubKey,
-            authority: connectedWallet!.publicKey,
-            systemProgram: anchor.web3.SystemProgram.programId,
-          },
-          // No signers necessary: wallet and pda are implicit
-        })
+        program!.instruction.createBenefit(
+          'Benefit Name',
+          benefits[i],
+          benefitNumber,
+          {
+            accounts: {
+              benefit: benefitPubKey,
+              creator: creatorPubKey,
+              authority: connectedWallet!.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+            // No signers necessary: wallet and pda are implicit
+          }
+        )
       );
-
     }
 
-    router.push('/creator-hub');
     await program!.provider.send(txn, []);
+
+    router.push('/creator-hub');
   }, [benefitRefs]);
 
   return (

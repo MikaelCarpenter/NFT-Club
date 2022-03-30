@@ -8,8 +8,8 @@ export interface UserProviderProps {
 export const UserProvider: FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User>({
     creatorAccount: null,
-    subscriptions: [],
-    isSubscribed: {},
+    subscriptions: {},
+    isLoaded: false,
   });
 
   return (

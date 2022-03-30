@@ -7,24 +7,10 @@ import {
   useState,
 } from 'react';
 import * as anchor from '@project-serum/anchor';
-import { ConfirmOptions } from '@solana/web3.js';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 
 import IDL from '../../target/idl/nft_club.json';
-
-const PROGRAM_ID = new anchor.web3.PublicKey(
-  'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
-);
-
-const OPTS = {
-  preflightCommitment: 'processed',
-} as ConfirmOptions;
-
-const endpoint = 'https://api.devnet.solana.com';
-const connection = new anchor.web3.Connection(
-  endpoint,
-  OPTS.preflightCommitment
-);
+import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 
 const SignUp = () => {
   const usernameRef = useRef<HTMLInputElement>(null);
@@ -128,11 +114,11 @@ const SignUp = () => {
   }, [benefitRefs]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full">
-      <div className="mb-8 prose">
+    <div className="flex h-full flex-col items-center justify-center">
+      <div className="prose mb-8">
         <h1>Sign Up</h1>
       </div>
-      <div className="w-full max-w-xs mb-16 form-control">
+      <div className="form-control mb-16 w-full max-w-xs">
         <label className="label">
           <span className="label-text">Username</span>
         </label>
@@ -140,7 +126,7 @@ const SignUp = () => {
           ref={usernameRef}
           type="text"
           placeholder="Jane Doe"
-          className="w-full max-w-xs mb-4 text-black input input-bordered"
+          className="input input-bordered mb-4 w-full max-w-xs text-black"
           maxLength={42}
           autoFocus
         />
@@ -151,7 +137,7 @@ const SignUp = () => {
           ref={emailRef}
           type="text"
           placeholder="jdoe@gmail.com"
-          className="w-full max-w-xs mb-4 text-black input input-bordered"
+          className="input input-bordered mb-4 w-full max-w-xs text-black"
           maxLength={42}
         />
         <label className="label">
@@ -159,12 +145,12 @@ const SignUp = () => {
         </label>
         <textarea
           ref={descriptionRef}
-          className="mb-4 text-black textarea textarea-bordered"
+          className="textarea textarea-bordered mb-4 text-black"
           placeholder="Is creating..."
           maxLength={420}
         />
 
-        <div className="flex items-center justify-between mb-4 prose">
+        <div className="prose mb-4 flex items-center justify-between">
           <h3>Benefits</h3>
 
           <button className="btn btn-outline btn-sm" onClick={handleNewBenefit}>
@@ -178,12 +164,12 @@ const SignUp = () => {
             ref={benefitRef}
             type="text"
             placeholder="Benefit description"
-            className="w-full max-w-xs mb-4 text-black input input-bordered"
+            className="input input-bordered mb-4 w-full max-w-xs text-black"
             maxLength={420}
           />
         ))}
 
-        <button className="mt-8 btn btn-primary" onClick={handleCreateAccount}>
+        <button className="btn btn-primary mt-8" onClick={handleCreateAccount}>
           Create Account
         </button>
       </div>

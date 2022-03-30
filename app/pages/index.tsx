@@ -5,28 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useUser } from '../hooks/userUser';
-import { ConfirmOptions } from '@solana/web3.js';
 import { IDL, NftClub } from '../../target/types/nft_club';
-
-const PROGRAM_ID = new anchor.web3.PublicKey(
-  'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
-);
-
-const OPTS = {
-  preflightCommitment: 'processed',
-} as ConfirmOptions;
-
-const endpoint = 'https://api.devnet.solana.com';
-
-const connection = new anchor.web3.Connection(
-  endpoint,
-  OPTS.preflightCommitment
-);
-
-interface FetchSubsReturn {
-  subscriptions: Record<string, unknown>[];
-  isSubscribed: Record<string, boolean>;
-}
+import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -78,7 +58,7 @@ const Home: NextPage = () => {
     async (
       nftClubProgram: anchor.Program<NftClub>,
       wallet: AnchorWallet
-    ): Promise<FetchSubsReturn> => {
+    ): Promise<Record<string, Record<string, unknown>>> => {
       const subscriptions = await nftClubProgram.account.subscription.all([
         {
           memcmp: {
@@ -88,26 +68,23 @@ const Home: NextPage = () => {
         },
       ]);
 
-      const isSubscribed: Record<string, boolean> = {};
-
       const newSubscriptions = await Promise.all(
         subscriptions.map((subscription) => {
-          isSubscribed[subscription.account.creator.toString()] = true;
+          const creatorPubKey = subscription.account.creator;
 
           return (async () => {
             // Fetch the creator to which this subscription belongs.
             const creator = await nftClubProgram.account.creator.fetch(
-              subscription.account.creator
+              creatorPubKey.toBase58()
             );
-
             // Fetch all benefit keys of this creator.
             const benefitPubKeys = await Promise.all(
               Array(creator.numBenefits)
                 .fill(0)
-                .map((id) =>
+                .map((_, id) =>
                   anchor.web3.PublicKey.findProgramAddress(
                     [
-                      creator.authority.toBuffer(),
+                      creatorPubKey.toBuffer(),
                       anchor.utils.bytes.utf8.encode('benefit'),
                       anchor.utils.bytes.utf8.encode(`${id + 1}`),
                     ],
@@ -128,10 +105,13 @@ const Home: NextPage = () => {
         })
       );
 
-      return {
-        subscriptions: newSubscriptions,
-        isSubscribed,
-      };
+      const subscriptionsMap: Record<string, Record<string, unknown>> = {};
+
+      newSubscriptions.forEach((sub) => {
+        subscriptionsMap[sub.account.creator.toBase58()] = sub;
+      });
+
+      return subscriptionsMap;
     },
     []
   );
@@ -142,14 +122,16 @@ const Home: NextPage = () => {
         nftClubProgram,
         wallet
       );
-      const { subscriptions, isSubscribed } =
-        await fetchSubscriptionsForUserWallet(nftClubProgram, wallet);
+      const subscriptions = await fetchSubscriptionsForUserWallet(
+        nftClubProgram,
+        wallet
+      );
 
-      (creator || subscriptions.length) &&
+      (creator || Object.values(subscriptions).length) &&
         setUser({
           subscriptions,
           creatorAccount: creator,
-          isSubscribed,
+          isLoaded: true,
         });
 
       setIsLoading(false);
@@ -159,24 +141,25 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     if (connectedWallet && program) {
+      if (user.isLoaded) return;
       setIsLoading(true);
       fetchUserDetails(program, connectedWallet);
     }
-  }, [connectedWallet, program, fetchUserDetails]);
+  }, [connectedWallet, program, fetchUserDetails, user]);
 
   const handleBecomeCreator = useCallback(() => {
     router.push('/sign-up');
   }, [router]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <progress className="progress w-56 place-content-center"></progress>;
   }
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="flex flex-col items-center mb-16">
+    <div className="flex h-full items-center justify-center">
+      <div className="mb-16 flex flex-col items-center">
         <div className="flex">
-          <div className="flex items-center justify-center flex-1 prose">
+          <div className="prose flex flex-1 items-center justify-center">
             <h1 className="text-center">
               Welcome
               <br />
@@ -188,7 +171,7 @@ const Home: NextPage = () => {
               </span>
             </h1>
           </div>
-          <div className="flex items-center justify-center flex-1 prose">
+          <div className="prose flex flex-1 items-center justify-center">
             <p className="p-8 text-center">
               Here's a big mass of text. Cool... Here's a big mass of text.
               Cool...Here's a big mass of text. Cool...Here's a big mass of
@@ -219,12 +202,12 @@ const Home: NextPage = () => {
             <button
               className="btn btn-primary"
               onClick={() => {
-                user.subscriptions.length
+                Object.keys(user.subscriptions).length
                   ? router.push('/subscription-hub')
                   : router.push('/creator-landing-page');
               }}
             >
-              {user.subscriptions.length
+              {Object.keys(user.subscriptions).length
                 ? 'See my subsriptions'
                 : 'Subscribe to a creator'}
             </button>

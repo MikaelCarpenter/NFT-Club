@@ -57,7 +57,7 @@ const Home: NextPage = () => {
     ): Promise<Record<string, unknown> | null> => {
       const creatorSeeds = [
         wallet.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('creator'),
+        Buffer.from('creator'),
       ];
 
       const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -109,8 +109,8 @@ const Home: NextPage = () => {
                   anchor.web3.PublicKey.findProgramAddress(
                     [
                       creator.authority.toBuffer(),
-                      anchor.utils.bytes.utf8.encode('benefit'),
-                      anchor.utils.bytes.utf8.encode(`${id + 1}`),
+                      Buffer.from('benefit'),
+                      Buffer.from(`${id + 1}`),
                     ],
                     nftClubProgram.programId
                   )

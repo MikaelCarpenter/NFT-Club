@@ -51,7 +51,7 @@ const CreatorLandingPage = () => {
   const fetchCreatorAndBenefitAccounts = async () => {
     const creatorSeeds = [
       connectedWallet!.publicKey.toBuffer(),
-      anchor.utils.bytes.utf8.encode('creator'),
+      Buffer.from('creator'),
     ];
 
     const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -66,18 +66,20 @@ const CreatorLandingPage = () => {
     const benefitAccounts = [];
 
     for (let i = 0; i < numBenefits; i++) {
-      const benefitNumber = anchor.utils.bytes.utf8.encode(`${i + 1}`);
+      const benefitNumber = Buffer.from(`${i + 1}`);
       const benefitSeeds = [
         creatorPubKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('benefit'),
-        benefitNumber,
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
       ];
 
       const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
         benefitSeeds,
         program!.programId
       );
-      const benefitAccount = await program!.account.creator.fetch(benefitPubKey);
+      const benefitAccount = await program!.account.creator.fetch(
+        benefitPubKey
+      );
       benefitAccounts.push(benefitAccount);
     }
 

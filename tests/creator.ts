@@ -11,10 +11,9 @@ describe('Creator', () => {
   anchor.setProvider(anchor.Provider.env());
 
   const program = anchor.workspace.NftClub as Program<NftClub>;
-  const creatorsWalletKeypair = program.provider.wallet;
   const creatorSeeds = [
-    creatorsWalletKeypair.publicKey.toBuffer(),
-    anchor.utils.bytes.utf8.encode('creator'),
+    program.provider.wallet.publicKey.toBuffer(),
+    Buffer.from('creator'),
   ];
 
   const endpoint = 'https://api.devnet.solana.com';
@@ -39,7 +38,7 @@ describe('Creator', () => {
         program.instruction.deleteAccount({
           accounts: {
             creator: creatorPubKey,
-            authority: creatorsWalletKeypair.publicKey,
+            authority: program.provider.wallet.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
           signers: [],
@@ -47,12 +46,6 @@ describe('Creator', () => {
       );
       const txnSigners = [];
       await program.provider.send(txn, txnSigners);
-
-      // Check if wallet balance is same as original after deletion
-      const balanceAfterDeletion = await connection.getBalance(
-        creatorsWalletKeypair.publicKey
-      );
-      assert.equal(balanceAfterDeletion, originalBalance - 10000);
 
       // Fetch Creator and check that it no longer exists
       try {
@@ -69,7 +62,7 @@ describe('Creator', () => {
 
     it("initializes an Account and stores the creator's info", async () => {
       originalBalance = await connection.getBalance(
-        creatorsWalletKeypair.publicKey
+        program.provider.wallet.publicKey
       );
       const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
         creatorSeeds,
@@ -83,14 +76,14 @@ describe('Creator', () => {
         {
           accounts: {
             creator: creatorPubKey,
-            authority: creatorsWalletKeypair.publicKey,
+            authority: program.provider.wallet.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
         }
       );
 
       balanceAfterCreation = await connection.getBalance(
-        creatorsWalletKeypair.publicKey
+        program.provider.wallet.publicKey
       );
       expect(balanceAfterCreation).to.be.below(originalBalance);
 
@@ -102,7 +95,7 @@ describe('Creator', () => {
       assert.equal(creatorAccount.numBenefits, 0);
       assert.equal(
         creatorAccount.authority.toBase58(),
-        creatorsWalletKeypair.publicKey.toBase58()
+        program.provider.wallet.publicKey.toBase58()
       );
     });
   });
@@ -121,7 +114,7 @@ describe('Creator', () => {
           {
             accounts: {
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -152,7 +145,7 @@ describe('Creator', () => {
           {
             accounts: {
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -183,7 +176,7 @@ describe('Creator', () => {
           {
             accounts: {
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -206,7 +199,7 @@ describe('Creator', () => {
     // Create account
     before(async () => {
       originalBalance = await connection.getBalance(
-        creatorsWalletKeypair.publicKey
+        program.provider.wallet.publicKey
       );
       const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
         creatorSeeds,
@@ -220,7 +213,7 @@ describe('Creator', () => {
         {
           accounts: {
             creator: creatorPubKey,
-            authority: creatorsWalletKeypair.publicKey,
+            authority: program.provider.wallet.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
         }
@@ -234,7 +227,7 @@ describe('Creator', () => {
       assert.equal(creatorAccount.numBenefits, 0);
       assert.equal(
         creatorAccount.authority.toBase58(),
-        creatorsWalletKeypair.publicKey.toBase58()
+        program.provider.wallet.publicKey.toBase58()
       );
     });
 
@@ -252,7 +245,7 @@ describe('Creator', () => {
         program.instruction.deleteAccount({
           accounts: {
             creator: creatorPubKey,
-            authority: creatorsWalletKeypair.publicKey,
+            authority: program.provider.wallet.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
           signers: [],
@@ -293,7 +286,7 @@ describe('Creator', () => {
           {
             accounts: {
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -320,8 +313,6 @@ describe('Creator', () => {
         program.programId
       );
 
-      const creatorAccount = await program.account.creator.fetch(creatorPubKey);
-
       try {
         await program.rpc.updateAccount(
           'x'.repeat(43),
@@ -330,7 +321,7 @@ describe('Creator', () => {
           {
             accounts: {
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -354,8 +345,6 @@ describe('Creator', () => {
         program.programId
       );
 
-      const creatorAccount = await program.account.creator.fetch(creatorPubKey);
-
       try {
         await program.rpc.updateAccount(
           'updatedUsername',
@@ -364,7 +353,7 @@ describe('Creator', () => {
           {
             accounts: {
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -388,8 +377,6 @@ describe('Creator', () => {
         program.programId
       );
 
-      const creatorAccount = await program.account.creator.fetch(creatorPubKey);
-
       try {
         await program.rpc.updateAccount(
           'updatedUsername',
@@ -398,7 +385,7 @@ describe('Creator', () => {
           {
             accounts: {
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }

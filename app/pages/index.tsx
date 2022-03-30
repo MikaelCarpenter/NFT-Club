@@ -65,69 +65,6 @@ const Home: NextPage = () => {
       nftClubProgram: anchor.Program<NftClub>,
       wallet: AnchorWallet
     ): Promise<FetchSubsReturn> => {
-      // try {
-      //   const tempCreator = await nftClubProgram.account.creator.fetch(
-      //     'FKjUMq6WC6zmJxsc2MJQC7ZikR7BqAQ2acWDm2QDRCwb'
-      //   );
-      //   console.log(tempCreator);
-      //   const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
-      //     [
-      //       tempCreator.authority.toBuffer(),
-      //       anchor.utils.bytes.utf8.encode('creator'),
-      //     ],
-      //     nftClubProgram.programId
-      //   );
-      //   console.log(creatorPubKey.toBase58());
-      //   const subscriptionSeeds = [
-      //     creatorPubKey.toBuffer(),
-      //     wallet.publicKey.toBuffer(),
-      //     anchor.utils.bytes.utf8.encode('subscription'),
-      //   ];
-      //   const [subscriptionPubKey] =
-      //     await anchor.web3.PublicKey.findProgramAddress(
-      //       subscriptionSeeds,
-      //       nftClubProgram.programId
-      //     );
-      //   console.log(subscriptionPubKey.toBase58());
-      //   await nftClubProgram.rpc.createSubscription({
-      //     accounts: {
-      //       subscription: subscriptionPubKey.toBase58(),
-      //       creator: creatorPubKey.toBase58(),
-      //       creatorSolAccount: tempCreator.authority.toBase58(),
-      //       user: wallet.publicKey.toBase58(),
-      //       systemProgram: anchor.web3.SystemProgram.programId,
-      //       tokenProgram: TOKEN_PROGRAM_ID,
-      //     },
-      //   });
-      //   // Fetch all benefit keys of this creator.
-      //   let benefitPubKeys = await Promise.all(
-      //     Array(tempCreator.numBenefits)
-      //       .fill(0)
-      //       .map((_, id) =>
-      //         anchor.web3.PublicKey.findProgramAddress(
-      //           [
-      //             creatorPubKey.toBuffer(),
-      //             anchor.utils.bytes.utf8.encode('benefit'),
-      //             anchor.utils.bytes.utf8.encode(`${id + 1}`),
-      //           ],
-      //           nftClubProgram.programId
-      //         )
-      //       )
-      //   );
-      //   benefitPubKeys = benefitPubKeys.slice(0, 2);
-      //   console.log(benefitPubKeys);
-      //   // Fetch all benefits of this creator.
-      //   const benefits = await Promise.all(
-      //     benefitPubKeys.map(([pubKey]) => {
-      //       console.log(pubKey.toBase58());
-      //       return nftClubProgram.account.benefit.fetch(pubKey.toBase58());
-      //     })
-      //   );
-      //   console.log('hi', benefits);
-      // } catch (error) {
-      //   console.log('hi', error);
-      // }
-
       const subscriptions = await nftClubProgram.account.subscription.all([
         {
           memcmp: {

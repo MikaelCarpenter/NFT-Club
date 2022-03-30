@@ -38,29 +38,33 @@ const Creators: FC<CreatorsType> = ({ creators, isSubscribed }) => {
       wallet: AnchorWallet,
       creatorSolKey: anchor.web3.PublicKey
     ) => {
-      setIsLoading(true);
-      const subscriptionSeeds = [
-        creatorPubKey.toBuffer(),
-        wallet.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('subscription'),
-      ];
-      const [subscriptionPubKey] =
-        await anchor.web3.PublicKey.findProgramAddress(
-          subscriptionSeeds,
-          program.programId
-        );
+      try {
+        setIsLoading(true);
+        const subscriptionSeeds = [
+          creatorPubKey.toBuffer(),
+          wallet.publicKey.toBuffer(),
+          anchor.utils.bytes.utf8.encode('subscription'),
+        ];
+        const [subscriptionPubKey] =
+          await anchor.web3.PublicKey.findProgramAddress(
+            subscriptionSeeds,
+            program.programId
+          );
 
-      await program.rpc.createSubscription({
-        accounts: {
-          subscription: subscriptionPubKey.toBase58(),
-          creator: creatorPubKey.toBase58(),
-          creatorSolAccount: creatorSolKey.toBase58(),
-          user: wallet.publicKey.toBase58(),
-          systemProgram: anchor.web3.SystemProgram.programId,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        },
-      });
-      setIsLoading(false);
+        await program.rpc.createSubscription({
+          accounts: {
+            subscription: subscriptionPubKey.toBase58(),
+            creator: creatorPubKey.toBase58(),
+            creatorSolAccount: creatorSolKey.toBase58(),
+            user: wallet.publicKey.toBase58(),
+            systemProgram: anchor.web3.SystemProgram.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          },
+        });
+        setIsLoading(false);
+      } catch (error) {
+        console.error(error);
+      }
     },
     []
   );
@@ -72,29 +76,33 @@ const Creators: FC<CreatorsType> = ({ creators, isSubscribed }) => {
       wallet: AnchorWallet,
       creatorSolKey: anchor.web3.PublicKey
     ) => {
-      setIsLoading(true);
-      const subscriptionSeeds = [
-        creatorPubKey.toBuffer(),
-        wallet.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('subscription'),
-      ];
-      const [subscriptionPubKey] =
-        await anchor.web3.PublicKey.findProgramAddress(
-          subscriptionSeeds,
-          program.programId
-        );
+      try {
+        setIsLoading(true);
+        const subscriptionSeeds = [
+          creatorPubKey.toBuffer(),
+          wallet.publicKey.toBuffer(),
+          anchor.utils.bytes.utf8.encode('subscription'),
+        ];
+        const [subscriptionPubKey] =
+          await anchor.web3.PublicKey.findProgramAddress(
+            subscriptionSeeds,
+            program.programId
+          );
 
-      await program.rpc.updateSubscription({
-        accounts: {
-          subscription: subscriptionPubKey.toBase58(),
-          creator: creatorPubKey.toBase58(),
-          creatorSolAccount: creatorSolKey.toBase58(),
-          user: wallet.publicKey.toBase58(),
-          systemProgram: anchor.web3.SystemProgram.programId,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        },
-      });
-      setIsLoading(false);
+        await program.rpc.updateSubscription({
+          accounts: {
+            subscription: subscriptionPubKey.toBase58(),
+            creator: creatorPubKey.toBase58(),
+            creatorSolAccount: creatorSolKey.toBase58(),
+            user: wallet.publicKey.toBase58(),
+            systemProgram: anchor.web3.SystemProgram.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          },
+        });
+        setIsLoading(false);
+      } catch (error) {
+        console.error(error);
+      }
     },
     []
   );
@@ -111,7 +119,8 @@ const Creators: FC<CreatorsType> = ({ creators, isSubscribed }) => {
           const creatorPubKey = creator.publicKey.toBase58();
           const subscription = isSubscribed[creatorPubKey];
           const subscriptionExpired = subscription
-            ? subscription.account.expireTimestamp.toNumber() < Date.now()
+            ? subscription.account.expireTimestamp.toNumber() * 1000 <
+              Date.now()
             : true;
           return (
             <div className="card my-3 w-96 bg-base-100 shadow-xl" key={key}>
@@ -141,7 +150,7 @@ const Creators: FC<CreatorsType> = ({ creators, isSubscribed }) => {
                           program,
                           creator.publicKey,
                           connectedWallet,
-                          creator.authority
+                          creator.account.authority
                         );
                         return;
                       }
@@ -156,7 +165,7 @@ const Creators: FC<CreatorsType> = ({ creators, isSubscribed }) => {
                           program,
                           creator.publicKey,
                           connectedWallet,
-                          creator.authority
+                          creator.account.authority
                         );
                     }}
                   >

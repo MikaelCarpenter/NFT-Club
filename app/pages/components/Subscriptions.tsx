@@ -74,7 +74,7 @@ const Subscriptions: FC<SubscriptionsType> = ({ subscriptions }) => {
       <div className="grid grid-cols-1 px-10 py-5 md:grid-cols-3">
         {subscriptions.map((subscription, key) => {
           const subscriptionExpired =
-            subscription.account.expireTimestamp.toNumber() < Date.now();
+            subscription.account.expireTimestamp.toNumber() * 1000 < Date.now();
           return (
             <div className="card my-3 w-96 bg-base-100 shadow-xl" key={key}>
               <figure>
@@ -107,9 +107,9 @@ const Subscriptions: FC<SubscriptionsType> = ({ subscriptions }) => {
                         program &&
                         updateSubscription(
                           program,
-                          subscription.creator.account.authority,
+                          subscription.account.creator,
                           connectedWallet,
-                          subscription.creator.publicKey
+                          subscription.creator.authority
                         );
                     }}
                   >

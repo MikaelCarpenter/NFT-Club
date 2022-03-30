@@ -6,13 +6,7 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useUser } from '../hooks/userUser';
 import { IDL, NftClub } from '../../target/types/nft_club';
-import { TOKEN_PROGRAM_ID } from '@project-serum/token';
 import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
-
-interface FetchSubsReturn {
-  subscriptions: Record<string, unknown>[];
-  isSubscribed: Record<string, Record<string, unknown>>;
-}
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -64,7 +58,7 @@ const Home: NextPage = () => {
     async (
       nftClubProgram: anchor.Program<NftClub>,
       wallet: AnchorWallet
-    ): Promise<FetchSubsReturn> => {
+    ): Promise<Record<string, Record<string, unknown>>> => {
       const subscriptions = await nftClubProgram.account.subscription.all([
         {
           memcmp: {
@@ -74,12 +68,9 @@ const Home: NextPage = () => {
         },
       ]);
 
-      const isSubscribed: Record<string, Record<string, unknown>> = {};
-
       const newSubscriptions = await Promise.all(
         subscriptions.map((subscription) => {
           const creatorPubKey = subscription.account.creator;
-          isSubscribed[creatorPubKey.toBase58()] = subscription;
 
           return (async () => {
             // Fetch the creator to which this subscription belongs.
@@ -114,10 +105,13 @@ const Home: NextPage = () => {
         })
       );
 
-      return {
-        subscriptions: newSubscriptions,
-        isSubscribed,
-      };
+      const subscriptionsMap: Record<string, Record<string, unknown>> = {};
+
+      newSubscriptions.forEach((sub) => {
+        subscriptionsMap[sub.account.creator.toBase58()] = sub;
+      });
+
+      return subscriptionsMap;
     },
     []
   );
@@ -128,14 +122,15 @@ const Home: NextPage = () => {
         nftClubProgram,
         wallet
       );
-      const { subscriptions, isSubscribed } =
-        await fetchSubscriptionsForUserWallet(nftClubProgram, wallet);
+      const subscriptions = await fetchSubscriptionsForUserWallet(
+        nftClubProgram,
+        wallet
+      );
 
-      (creator || subscriptions.length) &&
+      (creator || Object.values(subscriptions).length) &&
         setUser({
           subscriptions,
           creatorAccount: creator,
-          isSubscribed,
         });
 
       setIsLoading(false);
@@ -205,12 +200,12 @@ const Home: NextPage = () => {
             <button
               className="btn btn-primary"
               onClick={() => {
-                user.subscriptions.length
+                Object.keys(user.subscriptions).length
                   ? router.push('/subscription-hub')
                   : router.push('/creator-landing-page');
               }}
             >
-              {user.subscriptions.length
+              {Object.keys(user.subscriptions).length
                 ? 'See my subsriptions'
                 : 'Subscribe to a creator'}
             </button>

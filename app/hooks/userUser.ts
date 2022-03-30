@@ -2,8 +2,7 @@ import { createContext, useContext } from 'react';
 
 export interface User {
   creatorAccount: Record<string, unknown> | null;
-  subscriptions: Record<string, unknown>[];
-  isSubscribed: Record<string, Record<string, unknown>>;
+  subscriptions: Record<string, Record<string, unknown>>;
 }
 
 export interface UserState {

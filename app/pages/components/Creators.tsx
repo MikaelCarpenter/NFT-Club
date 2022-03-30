@@ -1,115 +1,28 @@
 import * as anchor from '@project-serum/anchor';
-import { TOKEN_PROGRAM_ID } from '@project-serum/token';
-import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import { useRouter } from 'next/router';
-import { FC, useCallback, useMemo, useState } from 'react';
-import { IDL, NftClub } from '../../../target/types/nft_club';
-import { connection, OPTS, PROGRAM_ID } from '../../utils/Connection';
+import { FC } from 'react';
 
 interface CreatorsType {
   creators: Record<string, unknown>[];
-  isSubscribed: Record<string, Record<string, unknown>>;
+  subscriptions: Record<string, Record<string, unknown>>;
+  subscribeToCreator(
+    creatorPubKey: anchor.web3.PublicKey,
+    creatorSolKey: anchor.web3.PublicKey
+  ): void;
+  updateSubscription(
+    creatorPubKey: anchor.web3.PublicKey,
+    creatorSolKey: anchor.web3.PublicKey
+  ): void;
 }
 
-const Creators: FC<CreatorsType> = ({ creators, isSubscribed }) => {
+const Creators: FC<CreatorsType> = ({
+  creators,
+  subscriptions,
+  subscribeToCreator,
+  updateSubscription,
+}) => {
   const router = useRouter();
-
-  const connectedWallet = useAnchorWallet();
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  const program = useMemo(() => {
-    if (connectedWallet) {
-      const provider = new anchor.Provider(connection, connectedWallet, OPTS);
-
-      return new anchor.Program<NftClub>(
-        IDL as unknown as NftClub,
-        PROGRAM_ID,
-        provider
-      );
-    }
-    return null;
-  }, [connectedWallet]);
-
-  const subscribeToCreator = useCallback(
-    async (
-      program: anchor.Program<NftClub>,
-      creatorPubKey: anchor.web3.PublicKey,
-      wallet: AnchorWallet,
-      creatorSolKey: anchor.web3.PublicKey
-    ) => {
-      try {
-        setIsLoading(true);
-        const subscriptionSeeds = [
-          creatorPubKey.toBuffer(),
-          wallet.publicKey.toBuffer(),
-          anchor.utils.bytes.utf8.encode('subscription'),
-        ];
-        const [subscriptionPubKey] =
-          await anchor.web3.PublicKey.findProgramAddress(
-            subscriptionSeeds,
-            program.programId
-          );
-
-        await program.rpc.createSubscription({
-          accounts: {
-            subscription: subscriptionPubKey.toBase58(),
-            creator: creatorPubKey.toBase58(),
-            creatorSolAccount: creatorSolKey.toBase58(),
-            user: wallet.publicKey.toBase58(),
-            systemProgram: anchor.web3.SystemProgram.programId,
-            tokenProgram: TOKEN_PROGRAM_ID,
-          },
-        });
-        setIsLoading(false);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    []
-  );
-
-  const updateSubscription = useCallback(
-    async (
-      program: anchor.Program<NftClub>,
-      creatorPubKey: anchor.web3.PublicKey,
-      wallet: AnchorWallet,
-      creatorSolKey: anchor.web3.PublicKey
-    ) => {
-      try {
-        setIsLoading(true);
-        const subscriptionSeeds = [
-          creatorPubKey.toBuffer(),
-          wallet.publicKey.toBuffer(),
-          anchor.utils.bytes.utf8.encode('subscription'),
-        ];
-        const [subscriptionPubKey] =
-          await anchor.web3.PublicKey.findProgramAddress(
-            subscriptionSeeds,
-            program.programId
-          );
-
-        await program.rpc.updateSubscription({
-          accounts: {
-            subscription: subscriptionPubKey.toBase58(),
-            creator: creatorPubKey.toBase58(),
-            creatorSolAccount: creatorSolKey.toBase58(),
-            user: wallet.publicKey.toBase58(),
-            systemProgram: anchor.web3.SystemProgram.programId,
-            tokenProgram: TOKEN_PROGRAM_ID,
-          },
-        });
-        setIsLoading(false);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    []
-  );
-
-  if (isLoading) {
-    return <progress className="progress w-56 place-content-center"></progress>;
-  }
 
   return (
     <div className="prose max-w-none lg:prose-xl">
@@ -117,7 +30,7 @@ const Creators: FC<CreatorsType> = ({ creators, isSubscribed }) => {
       <div className="grid grid-cols-1 px-10 py-5 md:grid-cols-3">
         {creators.map((creator, key) => {
           const creatorPubKey = creator.publicKey.toBase58();
-          const subscription = isSubscribed[creatorPubKey];
+          const subscription = subscriptions[creatorPubKey];
           const subscriptionExpired = subscription
             ? subscription.account.expireTimestamp.toNumber() * 1000 <
               Date.now()
@@ -145,12 +58,10 @@ const Creators: FC<CreatorsType> = ({ creators, isSubscribed }) => {
                   <button
                     className="btn btn-primary"
                     onClick={() => {
-                      if (!subscription && program) {
+                      if (!subscription) {
                         subscribeToCreator(
-                          program,
-                          creator.publicKey,
-                          connectedWallet,
-                          creator.account.authority
+                          creator.publicKey as PublicKey,
+                          creator.account.authority as PublicKey
                         );
                         return;
                       }
@@ -160,13 +71,10 @@ const Creators: FC<CreatorsType> = ({ creators, isSubscribed }) => {
                         );
                         return;
                       }
-                      program &&
-                        updateSubscription(
-                          program,
-                          creator.publicKey,
-                          connectedWallet,
-                          creator.account.authority
-                        );
+                      updateSubscription(
+                        creator.publicKey as PublicKey,
+                        creator.account.authority as PublicKey
+                      );
                     }}
                   >
                     {subscription

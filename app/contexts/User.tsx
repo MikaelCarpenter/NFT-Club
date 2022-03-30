@@ -9,6 +9,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User>({
     creatorAccount: null,
     subscriptions: {},
+    isLoaded: false,
   });
 
   return (

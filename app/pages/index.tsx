@@ -131,6 +131,7 @@ const Home: NextPage = () => {
         setUser({
           subscriptions,
           creatorAccount: creator,
+          isLoaded: true,
         });
 
       setIsLoading(false);
@@ -140,10 +141,11 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     if (connectedWallet && program) {
+      if (user.isLoaded) return;
       setIsLoading(true);
       fetchUserDetails(program, connectedWallet);
     }
-  }, [connectedWallet, program, fetchUserDetails]);
+  }, [connectedWallet, program, fetchUserDetails, user]);
 
   const handleBecomeCreator = useCallback(() => {
     router.push('/sign-up');

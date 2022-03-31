@@ -12,7 +12,7 @@ const Home: NextPage = () => {
 
   const { isLoading, subscriptions } = user;
 
-  if (isLoading) {
+  if (connectedWallet && isLoading) {
     return <Loading />;
   }
 
@@ -62,7 +62,7 @@ const Home: NextPage = () => {
             >
               Become a Creator
             </button>
-            <br />
+            &nbsp; OR &nbsp;
             <button
               className="btn btn-primary"
               onClick={() => {

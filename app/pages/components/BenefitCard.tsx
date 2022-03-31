@@ -61,7 +61,9 @@ const BenefitCard: React.FC<Props> = ({ name, description, benefitNumber }) => {
       return;
     }
     if (newName.length > 42 || newDescription.length > 420) {
-      alert('Benefit name must be <= 42 and description must be <= 420');
+      alert(
+        'Benefit name must be <= 42 chars and description must be <= 420 chars'
+      );
       return;
     }
 

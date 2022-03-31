@@ -9,6 +9,7 @@ import { useUser } from '../hooks/userUser';
 import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 import Subscriptions from './components/Subscriptions';
 import update from 'immutability-helper';
+import Loading from './components/Loading';
 
 const SubscriptionHub: NextPage = () => {
   const router = useRouter();
@@ -82,7 +83,7 @@ const SubscriptionHub: NextPage = () => {
   );
 
   if (isLoading) {
-    return <progress className="progress w-56 place-content-center"></progress>;
+    return <Loading />;
   }
 
   // Reroute to `/` if wallet not connected.

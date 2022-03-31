@@ -2,13 +2,14 @@ import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@project-serum/token';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { NextPage } from 'next';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { IDL, NftClub } from '../../target/types/nft_club';
 import { useCreators } from '../hooks/useCreators';
 import { useUser } from '../hooks/userUser';
 import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 import Creators from './components/Creators';
 import update from 'immutability-helper';
+import Loading from './components/Loading';
 
 const CreatorsPage: NextPage = () => {
   const wallet = useAnchorWallet();
@@ -18,7 +19,7 @@ const CreatorsPage: NextPage = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { creators, setCreators, isLoaded, setIsLoaded } = useCreators();
+  const { creators, isLoading: isCreatorsLoading } = useCreators();
 
   const program = useMemo(() => {
     if (wallet) {
@@ -32,14 +33,6 @@ const CreatorsPage: NextPage = () => {
     }
     return null;
   }, [wallet]);
-
-  const fetchCreators = useCallback(
-    async (program: anchor.Program<NftClub>) => {
-      setCreators(await program.account.creator.all());
-      setIsLoaded(true);
-    },
-    [setCreators, setIsLoaded]
-  );
 
   const subscribeToCreator = useCallback(
     async (
@@ -176,15 +169,8 @@ const CreatorsPage: NextPage = () => {
     [program, wallet, user, setUser]
   );
 
-  useEffect(() => {
-    if (isLoaded || !program) {
-      return;
-    }
-    fetchCreators(program);
-  }, [isLoaded, program, fetchCreators]);
-
-  if (isLoading) {
-    return <progress className="progress w-56 place-content-center"></progress>;
+  if (isLoading || isCreatorsLoading) {
+    return <Loading />;
   }
 
   // Show different creators

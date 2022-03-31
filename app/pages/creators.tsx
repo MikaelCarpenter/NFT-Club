@@ -2,13 +2,14 @@ import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@project-serum/token';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { NextPage } from 'next';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { IDL, NftClub } from '../../target/types/nft_club';
 import { useCreators } from '../hooks/useCreators';
 import { useUser } from '../hooks/userUser';
 import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 import Creators from './components/Creators';
 import update from 'immutability-helper';
+import Loading from './components/Loading';
 
 const CreatorsPage: NextPage = () => {
   const wallet = useAnchorWallet();
@@ -169,7 +170,7 @@ const CreatorsPage: NextPage = () => {
   );
 
   if (isLoading || isCreatorsLoading) {
-    return <progress className="progress w-56 place-content-center"></progress>;
+    return <Loading />;
   }
 
   // Show different creators

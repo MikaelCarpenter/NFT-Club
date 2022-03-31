@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useUser } from '../hooks/userUser';
+import Loading from './components/Loading';
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -12,7 +13,7 @@ const Home: NextPage = () => {
   const { isLoading, subscriptions } = user;
 
   if (isLoading) {
-    return <progress className="progress w-56 place-content-center"></progress>;
+    return <Loading />;
   }
 
   return (

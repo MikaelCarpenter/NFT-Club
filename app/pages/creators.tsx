@@ -18,7 +18,7 @@ const CreatorsPage: NextPage = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { creators, setCreators, isLoaded, setIsLoaded } = useCreators();
+  const { creators, isLoading: isCreatorsLoading } = useCreators();
 
   const program = useMemo(() => {
     if (wallet) {
@@ -32,14 +32,6 @@ const CreatorsPage: NextPage = () => {
     }
     return null;
   }, [wallet]);
-
-  const fetchCreators = useCallback(
-    async (program: anchor.Program<NftClub>) => {
-      setCreators(await program.account.creator.all());
-      setIsLoaded(true);
-    },
-    [setCreators, setIsLoaded]
-  );
 
   const subscribeToCreator = useCallback(
     async (
@@ -176,14 +168,7 @@ const CreatorsPage: NextPage = () => {
     [program, wallet, user, setUser]
   );
 
-  useEffect(() => {
-    if (isLoaded || !program) {
-      return;
-    }
-    fetchCreators(program);
-  }, [isLoaded, program, fetchCreators]);
-
-  if (isLoading) {
+  if (isLoading || isCreatorsLoading) {
     return <progress className="progress w-56 place-content-center"></progress>;
   }
 

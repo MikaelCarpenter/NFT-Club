@@ -156,7 +156,6 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
     <UserContext.Provider
       value={{
         user,
-        setUser,
       }}
     >
       {children}

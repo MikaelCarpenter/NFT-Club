@@ -2,9 +2,7 @@ import { createContext, useContext } from 'react';
 
 export interface CreatorsState {
   creators: Record<string, unknown>[];
-  isLoaded: boolean;
-  setCreators(creators: Record<string, unknown>[]): void;
-  setIsLoaded(loaded: boolean): void;
+  isLoading: boolean;
 }
 
 export const CreatorsContext = createContext<CreatorsState>(

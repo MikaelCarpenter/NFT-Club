@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 export interface User {
   creatorAccount: Record<string, unknown> | null;
   subscriptions: Record<string, Record<string, unknown>>;
-  isLoaded: boolean;
+  isLoading: boolean;
 }
 
 export interface UserState {

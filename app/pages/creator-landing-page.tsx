@@ -2,12 +2,10 @@
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import * as anchor from '@project-serum/anchor';
-import { Program } from '@project-serum/anchor';
-import { useRouter } from 'next/router';
-import { ConfirmOptions } from '@solana/web3.js';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 
 import IDL from '../../target/idl/nft_club.json';
+import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 
 /*
   1.fetch a creator account
@@ -20,20 +18,6 @@ import IDL from '../../target/idl/nft_club.json';
 
 
 */
-
-const PROGRAM_ID = new anchor.web3.PublicKey(
-  'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
-);
-
-const OPTS = {
-  preflightCommitment: 'processed',
-} as ConfirmOptions;
-
-const endpoint = 'https://api.devnet.solana.com';
-const connection = new anchor.web3.Connection(
-  endpoint,
-  OPTS.preflightCommitment
-);
 
 const CreatorLandingPage = () => {
   const [benefitAccounts, updateBenefitAccount] = useState<Array<any>>([]);

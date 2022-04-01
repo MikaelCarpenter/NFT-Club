@@ -143,14 +143,14 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
           isLoading: false,
         });
     },
-    [getCreatorAccountForUserWallet, fetchSubscriptionsForUserWallet, setUser]
+    [getCreatorAccountForUserWallet, fetchSubscriptionsForUserWallet]
   );
 
   useEffect(() => {
     if (connectedWallet && program) {
       fetchUserDetails(program, connectedWallet);
     }
-  }, [connectedWallet, program, fetchUserDetails, user]);
+  }, [connectedWallet, program, fetchUserDetails]);
 
   return (
     <UserContext.Provider

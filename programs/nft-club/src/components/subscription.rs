@@ -117,7 +117,7 @@ pub struct CreateSubscription<'info> {
 pub struct UpdateSubscription<'info> {
     // Get the subscription for the following combination:
     // creatorPubKey + userPubKey + "subscription"
-    #[account(seeds = [creator.key().as_ref(), user.key().as_ref(), b"subscription".as_ref()], bump)]
+    #[account(seeds = [creator.key().as_ref(), user.key().as_ref(), b"subscription".as_ref()], bump = subscription.bump)]
     pub subscription: Account<'info, Subscription>,
 
     // Define user as mutable - money in their account

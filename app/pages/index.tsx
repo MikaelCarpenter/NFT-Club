@@ -1,176 +1,19 @@
-import * as anchor from '@project-serum/anchor';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useUser } from '../hooks/userUser';
-import { ConfirmOptions } from '@solana/web3.js';
-import { IDL, NftClub } from '../../target/types/nft_club';
-import { Creator } from '../types/Creator';
-
-const PROGRAM_ID = new anchor.web3.PublicKey(
-  'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
-);
-
-const OPTS = {
-  preflightCommitment: 'processed',
-} as ConfirmOptions;
-
-const endpoint = 'https://api.devnet.solana.com';
-
-const connection = new anchor.web3.Connection(
-  endpoint,
-  OPTS.preflightCommitment
-);
-
-interface FetchSubsReturn {
-  subscriptions: Record<string, unknown>[];
-  isSubscribed: Record<string, boolean>;
-}
+import Loading from './components/Loading';
 
 const Home: NextPage = () => {
   const router = useRouter();
   const connectedWallet = useAnchorWallet();
-  const { user, setUser } = useUser();
+  const { user } = useUser();
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { isLoading, subscriptions } = user;
 
-  // TODO: use this creator landing page
-  const program = useMemo(() => {
-    if (connectedWallet) {
-      const provider = new anchor.Provider(connection, connectedWallet, OPTS);
-
-      return new anchor.Program<NftClub>(
-        IDL as unknown as NftClub,
-        PROGRAM_ID,
-        provider
-      );
-    }
-    return null;
-  }, [connectedWallet]);
-
-  const getCreatorAccountForUserWallet = useCallback(
-    async (
-      nftClubProgram: anchor.Program<NftClub>,
-      wallet: AnchorWallet
-    ): Promise<Record<string, unknown> | null> => {
-      const creatorSeeds = [
-        wallet.publicKey.toBuffer(),
-        Buffer.from('creator'),
-      ];
-
-      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
-        creatorSeeds,
-        nftClubProgram.programId
-      );
-
-      try {
-        return await nftClubProgram.account.creator.fetch(creatorPubKey);
-      } catch (error) {
-        console.error(error);
-        return null;
-      }
-    },
-    []
-  );
-
-  const fetchSubscriptionsForUserWallet = useCallback(
-    async (
-      nftClubProgram: anchor.Program<NftClub>,
-      wallet: AnchorWallet
-    ): Promise<FetchSubsReturn> => {
-      const subscriptions = await nftClubProgram.account.subscription.all([
-        {
-          memcmp: {
-            offset: 8,
-            bytes: wallet.publicKey.toBase58(),
-          },
-        },
-      ]);
-
-      const isSubscribed: Record<string, boolean> = {};
-
-      const newSubscriptions = await Promise.all(
-        subscriptions.map((subscription) => {
-          isSubscribed[subscription.account.creator.toString()] = true;
-
-          return (async () => {
-            // Fetch the creator to which this subscription belongs.
-            const creator = await nftClubProgram.account.creator.fetch(
-              subscription.account.creator
-            );
-
-            // Fetch all benefit keys of this creator.
-            const benefitPubKeys = await Promise.all(
-              Array(creator.numBenefits)
-                .fill(0)
-                .map((id) =>
-                  anchor.web3.PublicKey.findProgramAddress(
-                    [
-                      creator.authority.toBuffer(),
-                      Buffer.from('benefit'),
-                      Buffer.from(`${id + 1}`),
-                    ],
-                    nftClubProgram.programId
-                  )
-                )
-            );
-
-            // Fetch all benefits of this creator.
-            const benefits = await Promise.all(
-              benefitPubKeys.map(([pubKey]) =>
-                nftClubProgram.account.benefit.fetch(pubKey)
-              )
-            );
-
-            return { ...subscription, creator, benefits };
-          })();
-        })
-      );
-
-      return {
-        subscriptions: newSubscriptions,
-        isSubscribed,
-      };
-    },
-    []
-  );
-
-  const fetchUserDetails = useCallback(
-    async (nftClubProgram: anchor.Program<NftClub>, wallet: AnchorWallet) => {
-      const creator = await getCreatorAccountForUserWallet(
-        nftClubProgram,
-        wallet
-      );
-      const { subscriptions, isSubscribed } =
-        await fetchSubscriptionsForUserWallet(nftClubProgram, wallet);
-
-      (creator || subscriptions.length) &&
-        setUser({
-          subscriptions,
-          creatorAccount: creator as Creator,
-          isSubscribed,
-        });
-
-      setIsLoading(false);
-    },
-    [getCreatorAccountForUserWallet, fetchSubscriptionsForUserWallet, setUser]
-  );
-
-  useEffect(() => {
-    if (connectedWallet && program) {
-      setIsLoading(true);
-      fetchUserDetails(program, connectedWallet);
-    }
-  }, [connectedWallet, program, fetchUserDetails]);
-
-  const handleBecomeCreator = useCallback(() => {
-    router.push('/sign-up');
-  }, [router]);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (connectedWallet && isLoading) {
+    return <Loading />;
   }
 
   return (
@@ -213,19 +56,22 @@ const Home: NextPage = () => {
           </button>
         ) : (
           <div>
-            <button className="btn btn-primary" onClick={handleBecomeCreator}>
+            <button
+              className="btn btn-primary"
+              onClick={() => router.push('/sign-up')}
+            >
               Become a Creator
             </button>
-            <br />
+            &nbsp; OR &nbsp;
             <button
               className="btn btn-primary"
               onClick={() => {
-                user.subscriptions.length
+                Object.keys(subscriptions).length
                   ? router.push('/subscription-hub')
                   : router.push('/creator-landing-page');
               }}
             >
-              {user.subscriptions.length
+              {Object.keys(subscriptions).length
                 ? 'See my subsriptions'
                 : 'Subscribe to a creator'}
             </button>

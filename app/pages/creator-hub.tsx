@@ -1,37 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as anchor from '@project-serum/anchor';
-import { ConfirmOptions } from '@solana/web3.js';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
-
+import update from 'immutability-helper';
 import IDL from '../../target/idl/nft_club.json';
 import { Benefit } from '../types/Benefit';
 import { useUser } from '../hooks/userUser';
 import BenefitCard from './components/BenefitCard';
-
-const PROGRAM_ID = new anchor.web3.PublicKey(
-  'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
-);
-
-const OPTS = {
-  preflightCommitment: 'processed',
-} as ConfirmOptions;
-
-const endpoint = 'https://api.devnet.solana.com';
-const connection = new anchor.web3.Connection(
-  endpoint,
-  OPTS.preflightCommitment
-);
+import Loading from './components/Loading';
+import { useRouter } from 'next/router';
+import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 
 const CreatorHub = () => {
-  const { user } = useUser();
+  const { user, setUser } = useUser();
+  const { creatorAccount, isLoading: isUserLoading } = user;
+  const [isLoading, setIsLoading] = useState(false);
   const [benefits, setBenefits] = useState<Array<Benefit>>([]);
-  const [creatorUsername, setCreatorUsername] = useState(
-    user.creatorAccount.username
-  );
-  const [creatorEmail, setCreatorEmail] = useState(user.creatorAccount.email);
-  const [creatorDescription, setCreatorDescription] = useState(
-    user.creatorAccount.description
-  );
+  const [isBenefitsLoaded, setIsBenefitsLoaded] = useState(false);
+  const router = useRouter();
+  const [creatorUsername, setCreatorUsername] = useState('');
+  const [creatorEmail, setCreatorEmail] = useState('');
+  const [creatorDescription, setCreatorDescription] = useState('');
+  const [isCreatorVarsSet, setIsCreatorsVarsSet] = useState(false);
   const [editName, setEditName] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
   const [editDescription, setEditDescription] = useState(false);
@@ -47,7 +36,9 @@ const CreatorHub = () => {
   }, [connectedWallet]);
 
   const getBenefits = useCallback(async () => {
-    if (connectedWallet && user && user.creatorAccount && program) {
+    if (isBenefitsLoaded) return;
+    if (connectedWallet && creatorAccount && program) {
+      setIsLoading(true);
       const creatorSeeds = [
         connectedWallet.publicKey.toBuffer(),
         Buffer.from('creator'),
@@ -57,10 +48,10 @@ const CreatorHub = () => {
         program.programId
       );
 
-      console.log(user.creatorAccount);
+      console.log(creatorAccount);
 
       const benefitArray = [];
-      for (let i = 1; i <= user.creatorAccount.numBenefits; i++) {
+      for (let i = 1; i <= creatorAccount.numBenefits; i++) {
         const benefitNumber = `${i}`;
         const benefitSeeds = [
           creatorPubKey.toBuffer(),
@@ -84,10 +75,12 @@ const CreatorHub = () => {
         }
       }
       setBenefits(benefitArray);
+      setIsBenefitsLoaded(true);
+      setIsLoading(false);
     }
-  }, [user, connectedWallet, program]);
+  }, [creatorAccount, connectedWallet, program, isBenefitsLoaded]);
 
-  const handleNewBenefit = async () => {
+  const handleNewBenefit = useCallback(async () => {
     if (connectedWallet && program) {
       // Get new benefit number
       // It's not this simple since we can delete a benefit in the middle...
@@ -143,30 +136,40 @@ const CreatorHub = () => {
         console.log(error);
       }
     }
-  };
+  }, [program, benefits, connectedWallet]);
 
   useEffect(() => {
-    if (connectedWallet && program && user && user.creatorAccount) {
+    if (isLoading || !creatorAccount || isCreatorVarsSet) return;
+    setCreatorUsername(creatorAccount.username as string);
+    setCreatorEmail(creatorAccount.email as string);
+    setCreatorDescription(creatorAccount.description as string);
+    setIsCreatorsVarsSet(true);
+  }, [isLoading, creatorAccount, isCreatorVarsSet]);
+
+  useEffect(() => {
+    if (connectedWallet && program && creatorAccount) {
       getBenefits();
     }
-  }, [connectedWallet, program, user, getBenefits]);
+  }, [connectedWallet, program, creatorAccount, getBenefits]);
 
-  const editCreator = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    type: string
-  ) => {
-    if (type === 'username') {
-      setCreatorUsername(event.target.value);
-    }
-    if (type === 'description') {
-      setCreatorDescription(event.target.value);
-    }
-    if (type === 'email') {
-      setCreatorEmail(event.target.value);
-    }
-  };
+  const editCreator = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
+      if (type === 'username') {
+        setCreatorUsername(event.target.value);
+      }
+      if (type === 'description') {
+        setCreatorDescription(event.target.value);
+      }
+      if (type === 'email') {
+        setCreatorEmail(event.target.value);
+      }
+    },
+    []
+  );
 
-  const updateAccount = async () => {
+  const updateAccount = useCallback(async () => {
+    if (!creatorAccount) return;
+
     if (creatorUsername.length === 0 || creatorDescription.length === 0) {
       alert('A creator must have a username or description');
       return;
@@ -179,12 +182,14 @@ const CreatorHub = () => {
     }
 
     if (
-      creatorUsername === user.creatorAccount.username &&
-      creatorEmail === user.creatorAccount.email &&
-      creatorDescription === user.creatorAccount.description
+      creatorUsername === creatorAccount.username &&
+      creatorEmail === creatorAccount.email &&
+      creatorDescription === creatorAccount.description
     ) {
       return;
     }
+
+    setIsLoading(true);
 
     if (program && connectedWallet) {
       const creatorSeeds = [
@@ -218,12 +223,28 @@ const CreatorHub = () => {
           console.log('UPDATE USER');
           console.log(updatedAccount);
           // update User
+          setUser(
+            update(user, {
+              creatorAccount: { $set: updatedAccount },
+            })
+          );
+          setIsLoading(false);
         }
       } catch (error) {
         console.log(error);
+        setIsLoading(false);
       }
     }
-  };
+  }, [
+    program,
+    connectedWallet,
+    creatorAccount,
+    creatorUsername,
+    creatorEmail,
+    creatorDescription,
+    user,
+    setUser,
+  ]);
 
   const toggleEditCreator = (type: string) => {
     if (type === 'username') {
@@ -237,15 +258,22 @@ const CreatorHub = () => {
     }
   };
 
+  if (isLoading || isUserLoading) return <Loading />;
+
+  if (!creatorAccount) {
+    router.push('/');
+    return null;
+  }
+
   // Do all of this if a creator is found
   // All creator fields are mandatory, so extra checking should not be necessary?: Check this...
   return (
     <div className="flex h-full w-full flex-col items-center">
-      {user.creatorAccount && (
+      {creatorAccount && (
         <div className="prose mb-8 w-3/5 text-center">
           <div>
             {!editName ? (
-              <h2 className="inline">{user.creatorAccount.username}</h2>
+              <h2 className="inline">{creatorAccount.username}</h2>
             ) : (
               <input
                 className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
@@ -261,7 +289,7 @@ const CreatorHub = () => {
             </p>
             <div>
               {!editEmail ? (
-                <p className="inline">{user.creatorAccount.email}</p>
+                <p className="inline">{creatorAccount.email}</p>
               ) : (
                 <input
                   className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
@@ -285,7 +313,7 @@ const CreatorHub = () => {
           </div>
           <div>
             {!editDescription ? (
-              <p className="inline">{user.creatorAccount.description}</p>
+              <p className="inline">{creatorAccount.description}</p>
             ) : (
               <input
                 className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"

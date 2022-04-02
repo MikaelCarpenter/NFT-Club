@@ -152,13 +152,20 @@ const CreatorHub = () => {
   }, [connectedWallet, program, user, getBenefits]);
 
   const updateAccount = async () => {
+    if (!user || !user.creatorAccount) {
+      alert('Creator Account can not be found. Please log in again');
+      return;
+    }
+
     const creatorUsername = usernameRef.current
       ? usernameRef.current.value
-      : '';
+      : user.creatorAccount.username;
     const creatorDescription = descriptionRef.current
       ? descriptionRef.current.value
-      : '';
-    const creatorEmail = emailRef.current ? emailRef.current.value : '';
+      : user.creatorAccount.description;
+    const creatorEmail = emailRef.current
+      ? emailRef.current.value
+      : user.creatorAccount.email;
 
     if (creatorUsername?.length === 0 || creatorDescription?.length === 0) {
       alert('A creator must have a username or description');
@@ -312,7 +319,6 @@ const CreatorHub = () => {
       )}
       <button
         className="btn btn-outline btn-sm mt-2 h-12 w-32"
-        onClick={handleNewBenefit}
       >
         Add Benefit
       </button>

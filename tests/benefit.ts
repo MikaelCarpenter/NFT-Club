@@ -8,13 +8,12 @@ describe('Benefit', () => {
   anchor.setProvider(anchor.Provider.env());
 
   const program = anchor.workspace.NftClub as Program<NftClub>;
-  const creatorsWalletKeypair = program.provider.wallet;
 
   const endpoint = 'https://api.devnet.solana.com';
   const connection = new anchor.web3.Connection(endpoint, 'confirmed');
   const creatorSeeds = [
-    creatorsWalletKeypair.publicKey.toBuffer(),
-    anchor.utils.bytes.utf8.encode('creator'),
+    program.provider.wallet.publicKey.toBuffer(),
+    Buffer.from('creator'),
   ];
 
   let originalBalance;
@@ -30,17 +29,17 @@ describe('Benefit', () => {
       const creatorAccount = await program.account.creator.fetch(creatorPubKey);
       const numBenefits = creatorAccount.numBenefits;
 
-      const txn = new anchor.web3.Transaction();
+      const benefitTxn = new anchor.web3.Transaction();
       const benefitPubKeys = [];
 
       // Delete all Benefits of a Creator
       for (let i = 1; i <= numBenefits; i++) {
         // delete with index
-        const benefitNumber = anchor.utils.bytes.utf8.encode(`${i}`);
+        const benefitNumber = i.toString();
         const benefitSeeds = [
           creatorPubKey.toBuffer(),
-          anchor.utils.bytes.utf8.encode('benefit'),
-          benefitNumber,
+          Buffer.from('benefit'),
+          Buffer.from(benefitNumber),
         ];
 
         const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -49,34 +48,44 @@ describe('Benefit', () => {
         );
         benefitPubKeys.push(benefitPubKey);
 
-        // need separate txns to check numbenefits decrement?
-
         // Delete Benefit
-        txn.add(
+        benefitTxn.add(
           program.instruction.deleteBenefit(benefitNumber, {
             accounts: {
               benefit: benefitPubKey,
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           })
         );
       }
 
+      const txnSigners = [];
+      await program.provider.send(benefitTxn, txnSigners);
+
+      // Re-fetch Creator and check that numBenefits updated
+      const creatorAfterBenefitsDeleted = await program.account.creator.fetch(
+        creatorPubKey
+      );
+      assert.equal(creatorAccount.numBenefits, numBenefits);
+      assert.equal(creatorAfterBenefitsDeleted.numBenefits, 0);
+
+      const creatorTxn = new anchor.web3.Transaction();
+
       // Delete Creator
-      txn.add(
+      creatorTxn.add(
         program.instruction.deleteAccount({
           accounts: {
             creator: creatorPubKey,
-            authority: creatorsWalletKeypair.publicKey,
+            authority: program.provider.wallet.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
           signers: [],
         })
       );
-      const txnSigners = [];
-      await program.provider.send(txn, txnSigners);
+
+      await program.provider.send(creatorTxn, txnSigners);
 
       // Fetch each Benefit and check that it no longer exists
       try {
@@ -90,12 +99,6 @@ describe('Benefit', () => {
           'Error: Account does not exist 8NC7Wvx2YdsjHfX8ENkmGWRAZCKg8KUEafbajipNg7dz';
         assert.equal(error.toString(), errorMsg);
       }
-
-      // Check if wallet balance is same as original after deletion
-      const balanceAfterDeletion = await connection.getBalance(
-        creatorsWalletKeypair.publicKey
-      );
-      assert.equal(balanceAfterDeletion, originalBalance - 10000);
 
       // Fetch Creator and check that it no longer exists
       try {
@@ -111,7 +114,7 @@ describe('Benefit', () => {
 
     it('can bundle the creation of a Creator and their Benefit account', async () => {
       originalBalance = await connection.getBalance(
-        creatorsWalletKeypair.publicKey
+        program.provider.wallet.publicKey
       );
 
       const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -119,11 +122,11 @@ describe('Benefit', () => {
         program.programId
       );
 
-      const benefitNumber = anchor.utils.bytes.utf8.encode('1');
+      const benefitNumber = '1';
       const benefitSeeds = [
         creatorPubKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('benefit'),
-        benefitNumber,
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
       ];
 
       const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -142,7 +145,7 @@ describe('Benefit', () => {
           {
             accounts: {
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
             signers: [],
@@ -159,7 +162,7 @@ describe('Benefit', () => {
             accounts: {
               benefit: benefitPubKey,
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
             signers: [],
@@ -173,12 +176,12 @@ describe('Benefit', () => {
       const benefitAccount = await program.account.benefit.fetch(benefitPubKey);
 
       balanceAfterCreation = await connection.getBalance(
-        creatorsWalletKeypair.publicKey
+        program.provider.wallet.publicKey
       );
 
       assert.equal(
         benefitAccount.authority.toBase58(),
-        creatorsWalletKeypair.publicKey.toBase58()
+        program.provider.wallet.publicKey.toBase58()
       );
       assert.equal(
         benefitAccount.authority.toBase58(),
@@ -196,11 +199,11 @@ describe('Benefit', () => {
         program.programId
       );
 
-      const benefitNumber = anchor.utils.bytes.utf8.encode('1');
+      const benefitNumber = '1';
       const benefitSeeds = [
         creatorPubKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('benefit'),
-        benefitNumber,
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
       ];
 
       const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -218,7 +221,7 @@ describe('Benefit', () => {
           {
             accounts: {
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -234,7 +237,7 @@ describe('Benefit', () => {
             accounts: {
               benefit: benefitPubKey,
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -265,11 +268,11 @@ describe('Benefit', () => {
         program.programId
       );
 
-      const benefitNumber = anchor.utils.bytes.utf8.encode('1');
+      const benefitNumber = '1';
       const benefitSeeds = [
         creatorPubKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('benefit'),
-        benefitNumber,
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
       ];
 
       const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -287,7 +290,7 @@ describe('Benefit', () => {
           {
             accounts: {
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -303,7 +306,7 @@ describe('Benefit', () => {
             accounts: {
               benefit: benefitPubKey,
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
             signers: [],
@@ -318,12 +321,12 @@ describe('Benefit', () => {
       const benefitAccount = await program.account.benefit.fetch(benefitPubKey);
 
       balanceAfterCreation = await connection.getBalance(
-        creatorsWalletKeypair.publicKey
+        program.provider.wallet.publicKey
       );
 
       assert.equal(
         benefitAccount.authority.toBase58(),
-        creatorsWalletKeypair.publicKey.toBase58()
+        program.provider.wallet.publicKey.toBase58()
       );
       assert.equal(
         benefitAccount.authority.toBase58(),
@@ -340,7 +343,7 @@ describe('Benefit', () => {
       assert.equal(creatorAccount.numBenefits, 1);
       assert.equal(
         creatorAccount.authority.toBase58(),
-        creatorsWalletKeypair.publicKey.toBase58()
+        program.provider.wallet.publicKey.toBase58()
       );
     });
 
@@ -354,11 +357,11 @@ describe('Benefit', () => {
       const txn = new anchor.web3.Transaction();
 
       // Delete all Benefit of a Creator
-      const benefitNumber = anchor.utils.bytes.utf8.encode('1');
+      const benefitNumber = '1';
       const benefitSeeds = [
         creatorPubKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('benefit'),
-        benefitNumber,
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
       ];
 
       const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -372,7 +375,7 @@ describe('Benefit', () => {
           accounts: {
             benefit: benefitPubKey,
             creator: creatorPubKey,
-            authority: creatorsWalletKeypair.publicKey,
+            authority: program.provider.wallet.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
         })
@@ -383,7 +386,7 @@ describe('Benefit', () => {
         program.instruction.deleteAccount({
           accounts: {
             creator: creatorPubKey,
-            authority: creatorsWalletKeypair.publicKey,
+            authority: program.provider.wallet.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
           signers: [],
@@ -412,11 +415,11 @@ describe('Benefit', () => {
         program.programId
       );
 
-      const benefitNumber = anchor.utils.bytes.utf8.encode('1');
+      const benefitNumber = '1';
       const benefitSeeds = [
         creatorPubKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('benefit'),
-        benefitNumber,
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
       ];
 
       const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
@@ -438,7 +441,7 @@ describe('Benefit', () => {
             accounts: {
               benefit: benefitPubKey,
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -463,19 +466,17 @@ describe('Benefit', () => {
         program.programId
       );
 
-      const benefitNumber = anchor.utils.bytes.utf8.encode('1');
+      const benefitNumber = '1';
       const benefitSeeds = [
         creatorPubKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode('benefit'),
-        benefitNumber,
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
       ];
 
       const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
         benefitSeeds,
         program.programId
       );
-
-      const benefitAccount = await program.account.benefit.fetch(benefitPubKey);
 
       const txn = new anchor.web3.Transaction();
 
@@ -489,7 +490,7 @@ describe('Benefit', () => {
             accounts: {
               benefit: benefitPubKey,
               creator: creatorPubKey,
-              authority: creatorsWalletKeypair.publicKey,
+              authority: program.provider.wallet.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
             },
           }
@@ -499,7 +500,7 @@ describe('Benefit', () => {
       try {
         await program.provider.send(txn, []);
       } catch (error) {
-        console.log('ERROR: ', error);
+        console.log('ERROR: ', error.logs);
         assert.equal(
           error.msg,
           'The provided Benefit description should be 420 characters long maximum.'

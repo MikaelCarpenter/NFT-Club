@@ -56,7 +56,7 @@ const CreatorLandingPage = () => {
     console.log(numBenefits);
 
     for (let i = 0; i < numBenefits; i++) {
-      const benefitNumber = `${i + 1}`;
+      const benefitNumber = Buffer.from(`${i + 1}`);
       const benefitSeeds = [
         creatorPubKey.toBuffer(),
         Buffer.from('benefit'),

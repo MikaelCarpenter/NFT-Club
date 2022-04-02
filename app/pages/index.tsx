@@ -2,7 +2,7 @@ import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
-import { useUser } from '../hooks/userUser';
+import { useUser } from '../hooks/useUser';
 import Loading from './components/Loading';
 
 const Home: NextPage = () => {

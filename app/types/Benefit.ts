@@ -1,7 +1,7 @@
-import * as anchor from '@project-serum/anchor';
+import { PublicKey } from '@solana/web3.js';
 
 export type Benefit = {
-  authority: anchor.BN;
+  authority: PublicKey;
   description: string;
   name: string;
   bump: number;

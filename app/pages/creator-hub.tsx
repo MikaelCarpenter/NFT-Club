@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as anchor from '@project-serum/anchor';
-import { ConfirmOptions } from '@solana/web3.js';
+import { ConfirmOptions, PublicKey } from '@solana/web3.js';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 
 import IDL from '../../target/idl/nft_club.json';
@@ -27,16 +27,19 @@ const connection = new anchor.web3.Connection(
 const CreatorHub = () => {
   const { user } = useUser();
   const [benefits, setBenefits] = useState<Array<Benefit>>([]);
-  const [creatorUsername, setCreatorUsername] = useState(
-    user.creatorAccount.username
-  );
-  const [creatorEmail, setCreatorEmail] = useState(user.creatorAccount.email);
-  const [creatorDescription, setCreatorDescription] = useState(
-    user.creatorAccount.description
-  );
+
+  const usernameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLInputElement>(null);
+
   const [editName, setEditName] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
   const [editDescription, setEditDescription] = useState(false);
+
+  /*
+   * make useffect watching for user.creatorAccount
+   * fill in the state values if creator account exists
+   */
 
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
@@ -112,17 +115,23 @@ const CreatorHub = () => {
         Buffer.from(newBenefitNumber),
       ];
 
-      const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
-        benefitSeeds,
-        program.programId
-      );
+      const [benefitPubKey, bump] =
+        await anchor.web3.PublicKey.findProgramAddress(
+          benefitSeeds,
+          program.programId
+        );
 
-      const benefitArray = benefits;
+      const newBenefit: Benefit = {
+        authority: creatorPubKey,
+        bump,
+        description: `Benefit ${newBenefitNumber} description`,
+        name: `Benefit ${newBenefitNumber} Name`,
+      };
 
       try {
         await program.rpc.createBenefit(
-          `Benefit ${newBenefitNumber} Name`,
-          `Benefit ${newBenefitNumber} description`,
+          newBenefit.name,
+          newBenefit.description,
           newBenefitNumber,
           {
             accounts: {
@@ -135,11 +144,8 @@ const CreatorHub = () => {
           }
         );
 
-        const newBenefit = await program.account.benefit.fetch(benefitPubKey);
         if (newBenefit) {
-          benefitArray.push(newBenefit as Benefit);
-          setBenefits(benefitArray);
-          // Should re-render with new Benefits...
+          setBenefits([...benefits, newBenefit]);
         }
       } catch (error) {
         console.log(error);
@@ -153,23 +159,16 @@ const CreatorHub = () => {
     }
   }, [connectedWallet, program, user, getBenefits]);
 
-  const editCreator = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    type: string
-  ) => {
-    if (type === 'username') {
-      setCreatorUsername(event.target.value);
-    }
-    if (type === 'description') {
-      setCreatorDescription(event.target.value);
-    }
-    if (type === 'email') {
-      setCreatorEmail(event.target.value);
-    }
-  };
-
   const updateAccount = async () => {
-    if (creatorUsername.length === 0 || creatorDescription.length === 0) {
+    const creatorUsername = usernameRef.current
+      ? usernameRef.current.value
+      : '';
+    const creatorDescription = descriptionRef.current
+      ? descriptionRef.current.value
+      : '';
+    const creatorEmail = emailRef.current ? emailRef.current.value : '';
+
+    if (creatorUsername?.length === 0 || creatorDescription?.length === 0) {
       alert('A creator must have a username or description');
       return;
     }
@@ -181,9 +180,9 @@ const CreatorHub = () => {
     }
 
     if (
-      creatorUsername === user.creatorAccount.username &&
-      creatorEmail === user.creatorAccount.email &&
-      creatorDescription === user.creatorAccount.description
+      creatorUsername === user.creatorAccount?.username &&
+      creatorEmail === user.creatorAccount?.email &&
+      creatorDescription === user.creatorAccount?.description
     ) {
       return;
     }
@@ -213,11 +212,12 @@ const CreatorHub = () => {
           }
         );
 
+        //TODO: DON'T fetch this: look at how benefit is handled
         const updatedAccount = await program.account.creator.fetch(
           creatorPubKey
         );
         if (updatedAccount) {
-          console.log('UPDATE USER');
+          console.log('UPDATED USER');
           console.log(updatedAccount);
           // update User
         }
@@ -251,8 +251,8 @@ const CreatorHub = () => {
             ) : (
               <input
                 className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
-                value={creatorUsername}
-                onChange={(e) => editCreator(e, 'username')}
+                defaultValue={user.creatorAccount.username}
+                ref={usernameRef}
               ></input>
             )}
             <p
@@ -267,8 +267,8 @@ const CreatorHub = () => {
               ) : (
                 <input
                   className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
-                  value={creatorEmail}
-                  onChange={(e) => editCreator(e, 'email')}
+                  defaultValue={user.creatorAccount.email}
+                  ref={emailRef}
                 ></input>
               )}
               <p
@@ -291,8 +291,8 @@ const CreatorHub = () => {
             ) : (
               <input
                 className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
-                value={creatorDescription}
-                onChange={(e) => editCreator(e, 'description')}
+                defaultValue={user.creatorAccount.description}
+                ref={descriptionRef}
               ></input>
             )}
             <p
@@ -311,49 +311,15 @@ const CreatorHub = () => {
         </div>
       )}
       {benefits && benefits.length > 0 && (
-<<<<<<< HEAD
-        <div className="no-scrollbar prose h-2/3 w-1/2 overflow-y-scroll rounded-xl p-2">
-=======
-        <div className="no-scrollbar prose h-2/3 w-full overflow-y-scroll rounded-xl p-2">
->>>>>>> c61fddf (add update and addition of benefits on frontend; fix warnings)
+        <div className="no-scrollbar flex h-2/3 w-full flex-col items-center overflow-y-scroll rounded-xl p-2">
           {benefits.map((benefit, index) => (
             <BenefitCard
               key={`${index + 1}`}
-<<<<<<< HEAD
-              className="no-scrollbar m-4 h-1/3 overflow-y-scroll rounded-xl bg-primary p-4 text-white"
-            >
-              <h3 className="text-white">
-                {`${index + 1}`}{' '}
-                {benefit.name ? benefit.name : `Benefit ${index + 1}`}
-              </h3>
-              <p>{benefit.description}</p>
-            </div>
-          ))}
-          <div className="no-scrollbar m-4 h-1/3 overflow-y-scroll rounded-xl bg-primary p-4 text-white">
-            <h3>2. Benefit Name</h3>
-            <p>
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-              Benefit description Benefit description Benefit description
-            </p>
-          </div>
-=======
               name={benefit.name}
               description={benefit.description}
               benefitNumber={`${index + 1}`}
             />
           ))}
->>>>>>> c61fddf (add update and addition of benefits on frontend; fix warnings)
         </div>
       )}
       <button

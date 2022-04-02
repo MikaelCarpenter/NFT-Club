@@ -48,9 +48,7 @@ const Layout: FC = (props) => {
           <UserProvider>
             <CreatorsProvider>
               <Navbar />
-              <br />
-              <br />
-              <main data-theme="light" className="h-screen">
+              <main data-theme="light" className="-mt-16 h-screen pt-16">
                 {children}
               </main>
               {/* Footer */}

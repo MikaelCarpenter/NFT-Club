@@ -109,7 +109,7 @@ const BenefitCard: React.FC<Props> = ({ name, description, benefitNumber }) => {
   };
 
   return (
-    <div className="no-scrollbar m-4 h-1/3 overflow-y-scroll rounded-xl bg-primary p-4 text-white">
+    <div className="prose m-4 flex flex-col rounded-xl bg-primary p-4 text-white">
       <div className="flex items-center justify-around">
         <h3 className="text-white">{benefitNumber + '.'}</h3>
         <input

@@ -157,6 +157,7 @@ describe('Benefit', () => {
         program.instruction.createBenefit(
           'Benefit name',
           'benefit test description',
+          'benefit.link.com',
           benefitNumber,
           {
             accounts: {
@@ -232,6 +233,74 @@ describe('Benefit', () => {
         program.instruction.createBenefit(
           'Benefit name',
           'x'.repeat(421),
+          'benefit.link.com',
+          benefitNumber,
+          {
+            accounts: {
+              benefit: benefitPubKey,
+              creator: creatorPubKey,
+              authority: program.provider.wallet.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+          }
+        )
+      );
+
+      try {
+        await program.provider.send(txn, []);
+      } catch (error) {
+        assert.equal(
+          error.msg,
+          'The provided Benefit description should be 420 characters long maximum.'
+        );
+        return;
+      }
+
+      assert.fail(
+        'The instruction should have failed with a 421-character benefit description.'
+      );
+    });
+
+    it('cannot create a Benefit with link over 420 characters', async () => {
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      const benefitNumber = '1';
+      const benefitSeeds = [
+        creatorPubKey.toBuffer(),
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
+      ];
+
+      const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        benefitSeeds,
+        program.programId
+      );
+
+      const txn = new anchor.web3.Transaction();
+
+      txn.add(
+        program.instruction.createAccount(
+          'testUsername',
+          'test@email.com',
+          'test description',
+          {
+            accounts: {
+              creator: creatorPubKey,
+              authority: program.provider.wallet.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+          }
+        )
+      );
+
+      txn.add(
+        program.instruction.createBenefit(
+          'Benefit name',
+          'benefit description',
+          'x'.repeat(421),
           benefitNumber,
           {
             accounts: {
@@ -301,6 +370,7 @@ describe('Benefit', () => {
         program.instruction.createBenefit(
           'Benefit name',
           'benefit test description',
+          'benefit.link.com',
           benefitNumber,
           {
             accounts: {
@@ -436,6 +506,7 @@ describe('Benefit', () => {
         program.instruction.updateBenefit(
           'updatedName',
           'updated description',
+          'updatedBenefit.link.com',
           benefitNumber,
           {
             accounts: {
@@ -485,6 +556,7 @@ describe('Benefit', () => {
         program.instruction.updateBenefit(
           'updatedName',
           'x'.repeat(421),
+          'updatedBenefit.link.com',
           benefitNumber,
           {
             accounts: {
@@ -510,6 +582,60 @@ describe('Benefit', () => {
 
       assert.fail(
         'The instruction should have failed with a 421-character benefit description.'
+      );
+    });
+
+    it('cannot update a Benefit with link over 420 characters', async () => {
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      const benefitNumber = '1';
+      const benefitSeeds = [
+        creatorPubKey.toBuffer(),
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
+      ];
+
+      const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        benefitSeeds,
+        program.programId
+      );
+
+      const txn = new anchor.web3.Transaction();
+
+      // Update Benefit
+      txn.add(
+        program.instruction.updateBenefit(
+          'updatedName',
+          'updated description',
+          'x'.repeat(421),
+          benefitNumber,
+          {
+            accounts: {
+              benefit: benefitPubKey,
+              creator: creatorPubKey,
+              authority: program.provider.wallet.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+          }
+        )
+      );
+
+      try {
+        await program.provider.send(txn, []);
+      } catch (error) {
+        console.log('ERROR: ', error.logs);
+        assert.equal(
+          error.msg,
+          'The provided Benefit link should be 420 characters long maximum.'
+        );
+        return;
+      }
+
+      assert.fail(
+        'The instruction should have failed with a 421-character benefit link.'
       );
     });
   });

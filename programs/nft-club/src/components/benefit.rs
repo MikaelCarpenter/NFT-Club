@@ -8,6 +8,7 @@ pub fn create_benefit(
     ctx: Context<CreateBenefit>, 
     name: String, 
     description: String, 
+    link: String, 
     _benefit_number: String
 ) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
@@ -20,6 +21,7 @@ pub fn create_benefit(
     benefit.authority = *authority.key;
     benefit.name = name;
     benefit.description = description;
+    benefit.link = link;
     benefit.bump = *ctx.bumps.get("benefit").unwrap();
 
     Ok(())
@@ -40,12 +42,14 @@ pub fn update_benefit(
     ctx: Context<UpdateBenefit>, 
     name: String, 
     description: String, 
+    link: String, 
     _benefit_number: String
 ) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
 
     benefit.name = name;
     benefit.description = description;
+    benefit.link = link;
 
     Ok(())
 }
@@ -54,7 +58,7 @@ pub fn update_benefit(
 // Data Validators
 // 
 #[derive(Accounts)]
-#[instruction(name: String, description: String, benefit_number: String)]
+#[instruction(name: String, description: String, link: String, benefit_number: String)]
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
     // This also makes sure that we have only one benefit for the following combination
@@ -81,6 +85,7 @@ pub struct CreateBenefit<'info> {
 
     // Ensure System Program is the official one from Solana and handle errors
     #[account(constraint = description.chars().count() <= 420 @ errors::ErrorCode::BenefitDescriptionTooLong)]
+    #[account(constraint = link.chars().count() <= 420 @ errors::ErrorCode::BenefitLinkTooLong)]
     // Ensure benefit_number == num_benefits + 1
     #[account(
         constraint = benefit_number.parse::<u8>().unwrap() == creator.num_benefits + 1 
@@ -112,7 +117,7 @@ pub struct DeleteBenefit<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(name: String, description: String, benefit_number: String)]
+#[instruction(name: String, description: String, link: String, benefit_number: String)]
 pub struct UpdateBenefit<'info> {
     // Update account of type Benefit and assign creator's pubkey as the payer
     #[account(
@@ -143,6 +148,7 @@ pub struct Benefit {
     pub authority: Pubkey,
     pub name: String,
     pub description: String,
+    pub link: String,
     pub bump: u8,
 }
 
@@ -169,6 +175,7 @@ const PUBKEY_LENGTH: usize = 32;
 const STRING_LENGTH_PREFIX: usize = 4;
 const NAME_LENGTH: usize = 100 * 4;
 const DESCRIPTION_LENGTH: usize = 420 * 4;
+const LINK_LENGTH: usize = 420 * 4;
 const BUMP_LENGTH: usize = 1;
 
 impl Benefit {
@@ -176,5 +183,6 @@ impl Benefit {
         + PUBKEY_LENGTH 
         + STRING_LENGTH_PREFIX + NAME_LENGTH
         + STRING_LENGTH_PREFIX + DESCRIPTION_LENGTH
+        + STRING_LENGTH_PREFIX + LINK_LENGTH
         + BUMP_LENGTH;
 }

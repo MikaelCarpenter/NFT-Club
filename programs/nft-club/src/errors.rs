@@ -10,6 +10,8 @@ pub enum ErrorCode {
     DescriptionTooLong,
     #[msg("The provided Benefit description should be 420 characters long maximum.")]
     BenefitDescriptionTooLong,
+    #[msg("The provided Benefit link should be 420 characters long maximum.")]
+    BenefitLinkTooLong,
     #[msg(
         "The provided Benefit benefit_number is not valid (It should be 1 + creator.num_benefits)."
     )]

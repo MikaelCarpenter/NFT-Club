@@ -5,7 +5,7 @@ import { NextPage } from 'next';
 import { useCallback, useMemo, useState } from 'react';
 import { IDL, NftClub } from '../../target/types/nft_club';
 import { useCreators } from '../hooks/useCreators';
-import { useUser } from '../hooks/userUser';
+import { useUser } from '../hooks/useUser';
 import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 import Creators from './components/Creators';
 import update from 'immutability-helper';

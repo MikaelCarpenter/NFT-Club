@@ -105,6 +105,7 @@ const SignUp = () => {
           program.instruction.createBenefit(
             'Benefit Name',
             benefits[i],
+            'Benefit Link',
             benefitNumber,
             {
               accounts: {

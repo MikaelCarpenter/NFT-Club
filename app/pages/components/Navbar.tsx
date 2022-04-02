@@ -1,6 +1,6 @@
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import Link from 'next/link';
-import { useUser } from '../../hooks/userUser';
+import { useUser } from '../../hooks/useUser';
 
 const Navbar = () => {
   const {
@@ -8,7 +8,7 @@ const Navbar = () => {
   } = useUser();
 
   return (
-    <div className="navbar bg-primary text-primary-content">
+    <div className="navbar z-10 h-16 bg-primary text-primary-content">
       <div className="flex-1">
         <Link href="/">NFT Club</Link>
       </div>
@@ -16,7 +16,7 @@ const Navbar = () => {
         <ul className="menu menu-horizontal p-0">
           {!isLoading && (
             <>
-              {Object.keys(subscriptions).length && (
+              {Object.keys(subscriptions).length > 0 && (
                 <li>
                   <Link href="/subscription-hub">My Subscriptions</Link>
                 </li>

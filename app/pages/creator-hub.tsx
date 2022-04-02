@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as anchor from '@project-serum/anchor';
-import { ConfirmOptions, PublicKey } from '@solana/web3.js';
+import { ConfirmOptions } from '@solana/web3.js';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import IDL from '../../target/idl/nft_club.json';
-import { ProgramAccount } from '@project-serum/anchor';
-import { Creator } from '../types/Creator';
 import { Benefit } from '../types/Benefit';
-import { useUser } from '../hooks/userUser';
+import { useUser } from '../hooks/useUser';
 import BenefitCard from './components/BenefitCard';
 
 const PROGRAM_ID = new anchor.web3.PublicKey(
@@ -25,7 +23,7 @@ const connection = new anchor.web3.Connection(
 );
 
 const CreatorHub = () => {
-  const { user } = useUser();
+  const { user, fetchUserDetails } = useUser();
   const [benefits, setBenefits] = useState<Array<Benefit>>([]);
 
   const usernameRef = useRef<HTMLInputElement>(null);
@@ -212,15 +210,7 @@ const CreatorHub = () => {
           }
         );
 
-        //TODO: DON'T fetch this: look at how benefit is handled
-        const updatedAccount = await program.account.creator.fetch(
-          creatorPubKey
-        );
-        if (updatedAccount) {
-          console.log('UPDATED USER');
-          console.log(updatedAccount);
-          // update User
-        }
+        fetchUserDetails();
       } catch (error) {
         console.log(error);
       }

@@ -117,12 +117,14 @@ const BenefitCard: React.FC<Props> = ({ name, description, benefitNumber }) => {
           value={newName}
           onChange={(e) => editBenefit(e, 'name')}
         ></input>
+        {/*
         <button
           className="ml-8 w-20 rounded-xl bg-red-500 p-2"
           onClick={deleteBenefit}
         >
           Delete
         </button>
+        */}
         <button
           className="ml-8 w-20 rounded-xl bg-green-500 p-2"
           onClick={updateBenefit}

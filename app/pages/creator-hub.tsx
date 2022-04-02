@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as anchor from '@project-serum/anchor';
-import { ConfirmOptions, PublicKey } from '@solana/web3.js';
+import { ConfirmOptions } from '@solana/web3.js';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 
 import IDL from '../../target/idl/nft_club.json';
-import { ProgramAccount } from '@project-serum/anchor';
-import { Creator } from '../types/Creator';
 import { Benefit } from '../types/Benefit';
 import { useUser } from '../hooks/userUser';
 import BenefitCard from './components/BenefitCard';
@@ -32,14 +30,9 @@ const CreatorHub = () => {
   const emailRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLInputElement>(null);
 
-  const [editName, setEditName] = useState(false);
-  const [editEmail, setEditEmail] = useState(false);
-  const [editDescription, setEditDescription] = useState(false);
-
-  /*
-   * make useffect watching for user.creatorAccount
-   * fill in the state values if creator account exists
-   */
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
 
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
@@ -81,7 +74,6 @@ const CreatorHub = () => {
         try {
           const benefit = await program.account.benefit.fetch(benefitPubKey);
           if (benefit) {
-            console.log(benefit);
             benefitArray.push(benefit as Benefit);
           }
         } catch (error) {
@@ -172,9 +164,13 @@ const CreatorHub = () => {
       alert('A creator must have a username or description');
       return;
     }
-    if (creatorUsername.length > 42 || creatorDescription.length > 420) {
+    if (
+      creatorUsername.length > 42 ||
+      creatorEmail.length > 42 ||
+      creatorDescription.length > 420
+    ) {
       alert(
-        'Creator username must be <= 42 chars and description must be <= 420 chars'
+        'Creator username and email must be <= 42 chars, and description must be <= 420 chars'
       );
       return;
     }
@@ -229,13 +225,13 @@ const CreatorHub = () => {
 
   const toggleEditCreator = (type: string) => {
     if (type === 'username') {
-      setEditName(!editName);
+      setIsEditingName(!isEditingName);
     }
     if (type === 'email') {
-      setEditEmail(!editEmail);
+      setIsEditingEmail(!isEditingEmail);
     }
     if (type === 'description') {
-      setEditDescription(!editDescription);
+      setIsEditingDescription(!isEditingDescription);
     }
   };
 
@@ -246,7 +242,7 @@ const CreatorHub = () => {
       {user.creatorAccount && (
         <div className="prose mb-8 w-3/5 text-center">
           <div>
-            {!editName ? (
+            {!isEditingName ? (
               <h2 className="inline">{user.creatorAccount.username}</h2>
             ) : (
               <input
@@ -259,10 +255,10 @@ const CreatorHub = () => {
               className="inline cursor-pointer pl-2 text-gray-400"
               onClick={() => toggleEditCreator('username')}
             >
-              {!editName ? 'Edit' : 'Cancel'}
+              {!isEditingName ? 'Edit' : 'Cancel'}
             </p>
             <div>
-              {!editEmail ? (
+              {!isEditingEmail ? (
                 <p className="inline">{user.creatorAccount.email}</p>
               ) : (
                 <input
@@ -275,7 +271,7 @@ const CreatorHub = () => {
                 className="inline cursor-pointer pl-2 text-gray-400"
                 onClick={() => toggleEditCreator('email')}
               >
-                {!editEmail ? 'Edit' : 'Cancel'}
+                {!isEditingEmail ? 'Edit' : 'Cancel'}
               </p>
             </div>
           </div>
@@ -286,7 +282,7 @@ const CreatorHub = () => {
             )}
           </div>
           <div>
-            {!editDescription ? (
+            {!isEditingDescription ? (
               <p className="inline">{user.creatorAccount.description}</p>
             ) : (
               <input
@@ -299,7 +295,7 @@ const CreatorHub = () => {
               className="inline cursor-pointer pl-2 text-gray-400"
               onClick={() => toggleEditCreator('description')}
             >
-              {!editDescription ? 'Edit' : 'Cancel'}
+              {!isEditingDescription ? 'Edit' : 'Cancel'}
             </p>
           </div>
           <button

@@ -7,7 +7,8 @@ use crate::*;
 pub fn create_benefit(
     ctx: Context<CreateBenefit>, 
     name: String, 
-    description: String, 
+    description: String,
+    access_link: String,
     _benefit_number: String
 ) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
@@ -20,6 +21,7 @@ pub fn create_benefit(
     benefit.authority = *authority.key;
     benefit.name = name;
     benefit.description = description;
+    benefit.access_link = access_link;
     benefit.bump = *ctx.bumps.get("benefit").unwrap();
 
     Ok(())
@@ -39,13 +41,15 @@ pub fn delete_benefit(ctx: Context<DeleteBenefit>,  _benefit_number: String) -> 
 pub fn update_benefit(
     ctx: Context<UpdateBenefit>, 
     name: String, 
-    description: String, 
+    description: String,
+    access_link: String,
     _benefit_number: String
 ) -> Result<()> {
     let benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit;
 
     benefit.name = name;
     benefit.description = description;
+    benefit.access_link = access_link;
 
     Ok(())
 }
@@ -54,7 +58,7 @@ pub fn update_benefit(
 // Data Validators
 // 
 #[derive(Accounts)]
-#[instruction(name: String, description: String, benefit_number: String)]
+#[instruction(name: String, description: String, access_link: String, benefit_number: String)]
 pub struct CreateBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
     // This also makes sure that we have only one benefit for the following combination
@@ -81,6 +85,7 @@ pub struct CreateBenefit<'info> {
 
     // Ensure System Program is the official one from Solana and handle errors
     #[account(constraint = description.chars().count() <= 420 @ errors::ErrorCode::BenefitDescriptionTooLong)]
+    #[account(constraint = access_link.chars().count() <= 420 @ errors::ErrorCode::BenefitAccessLinkTooLong)]
     // Ensure benefit_number == num_benefits + 1
     #[account(
         constraint = benefit_number.parse::<u8>().unwrap() == creator.num_benefits + 1 
@@ -112,7 +117,7 @@ pub struct DeleteBenefit<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(name: String, description: String, benefit_number: String)]
+#[instruction(name: String, description: String, access_link: String, benefit_number: String)]
 pub struct UpdateBenefit<'info> {
     // Update account of type Benefit and assign creator's pubkey as the payer
     #[account(
@@ -134,6 +139,7 @@ pub struct UpdateBenefit<'info> {
 
     // Ensure System Program is the official one from Solana and handle errors
     #[account(constraint = description.chars().count() <= 420 @ errors::ErrorCode::BenefitDescriptionTooLong)]
+    #[account(constraint = access_link.chars().count() <= 420 @ errors::ErrorCode::BenefitAccessLinkTooLong)]
     pub system_program: Program<'info, System>,
 }
 
@@ -143,6 +149,7 @@ pub struct Benefit {
     pub authority: Pubkey,
     pub name: String,
     pub description: String,
+    pub access_link: String,
     pub bump: u8,
 }
 
@@ -169,6 +176,7 @@ const PUBKEY_LENGTH: usize = 32;
 const STRING_LENGTH_PREFIX: usize = 4;
 const NAME_LENGTH: usize = 100 * 4;
 const DESCRIPTION_LENGTH: usize = 420 * 4;
+const ACCESS_LINK_LENGTH: usize = 420 * 4;
 const BUMP_LENGTH: usize = 1;
 
 impl Benefit {
@@ -176,5 +184,5 @@ impl Benefit {
         + PUBKEY_LENGTH 
         + STRING_LENGTH_PREFIX + NAME_LENGTH
         + STRING_LENGTH_PREFIX + DESCRIPTION_LENGTH
-        + BUMP_LENGTH;
+        + ACCESS_LINK_LENGTH + BUMP_LENGTH;
 }

@@ -26,9 +26,10 @@ pub mod nft_club {
         ctx: Context<CreateBenefit>,
         name: String,
         description: String,
+        access_link: String,
         benefit_number: String,
     ) -> Result<()> {
-        components::create_benefit(ctx, name, description, benefit_number)
+        components::create_benefit(ctx, name, description, access_link, benefit_number)
     }
 
     pub fn create_subscription(ctx: Context<CreateSubscription>) -> Result<()> {
@@ -51,7 +52,7 @@ pub mod nft_club {
         components::update_account(ctx, username, email, description) 
     }
 
-    pub fn update_benefit(ctx: Context<UpdateBenefit>, name: String, description: String, benefit_number: String) -> Result<()> {
-        components::update_benefit(ctx, name, description, benefit_number)
+    pub fn update_benefit(ctx: Context<UpdateBenefit>, name: String, description: String, access_link: String, benefit_number: String) -> Result<()> {
+        components::update_benefit(ctx, name, description, access_link, benefit_number)
     }
 }

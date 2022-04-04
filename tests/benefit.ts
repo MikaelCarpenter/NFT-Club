@@ -157,6 +157,7 @@ describe('Benefit', () => {
         program.instruction.createBenefit(
           'Benefit name',
           'benefit test description',
+          '', // access_link
           benefitNumber,
           {
             accounts: {
@@ -188,6 +189,7 @@ describe('Benefit', () => {
         creatorAccount.authority.toBase58()
       );
       assert.equal(benefitAccount.description, 'benefit test description');
+      assert.equal(benefitAccount.accessLink, '');
       expect(balanceAfterCreation).to.be.below(originalBalance);
     });
   });
@@ -232,6 +234,7 @@ describe('Benefit', () => {
         program.instruction.createBenefit(
           'Benefit name',
           'x'.repeat(421),
+          '', // access_link
           benefitNumber,
           {
             accounts: {
@@ -301,6 +304,7 @@ describe('Benefit', () => {
         program.instruction.createBenefit(
           'Benefit name',
           'benefit test description',
+          '', // access_link
           benefitNumber,
           {
             accounts: {
@@ -333,6 +337,7 @@ describe('Benefit', () => {
         creatorAccount.authority.toBase58()
       );
       assert.equal(benefitAccount.description, 'benefit test description');
+      assert.equal(benefitAccount.accessLink, '');
       assert.equal(benefitAccount.name, 'Benefit name');
 
       expect(balanceAfterCreation).to.be.below(originalBalance);
@@ -431,11 +436,14 @@ describe('Benefit', () => {
 
       const txn = new anchor.web3.Transaction();
 
+      const accessLink = 'https://google.com';
+
       // Update Benefit
       txn.add(
         program.instruction.updateBenefit(
           'updatedName',
           'updated description',
+          accessLink,
           benefitNumber,
           {
             accounts: {
@@ -455,6 +463,7 @@ describe('Benefit', () => {
 
       assert.equal(updatedBenefit.name, 'updatedName');
       assert.equal(updatedBenefit.description, 'updated description');
+      assert.equal(updatedBenefit.accessLink, accessLink);
 
       assert.notEqual(benefitAccount.username, updatedBenefit.name);
       assert.notEqual(benefitAccount.email, updatedBenefit.description);
@@ -485,6 +494,7 @@ describe('Benefit', () => {
         program.instruction.updateBenefit(
           'updatedName',
           'x'.repeat(421),
+          '', // access_link
           benefitNumber,
           {
             accounts: {

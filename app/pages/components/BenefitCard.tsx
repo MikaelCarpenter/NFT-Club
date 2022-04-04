@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import * as anchor from '@project-serum/anchor';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
-import { ConfirmOptions, PublicKey } from '@solana/web3.js';
+import { ConfirmOptions } from '@solana/web3.js';
 
 import IDL from '../../../target/idl/nft_club.json';
 
@@ -22,12 +22,19 @@ const connection = new anchor.web3.Connection(
 interface Props {
   name: string;
   description: string;
+  accessLink: string;
   benefitNumber: string;
 }
 
-const BenefitCard: React.FC<Props> = ({ name, description, benefitNumber }) => {
+const BenefitCard: React.FC<Props> = ({
+  name,
+  description,
+  accessLink,
+  benefitNumber,
+}) => {
   const [newName, setNewName] = useState(name);
   const [newDescription, setNewDescription] = useState(description);
+  const [newAccessLink, setNewAccessLink] = useState(accessLink);
 
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
@@ -40,34 +47,27 @@ const BenefitCard: React.FC<Props> = ({ name, description, benefitNumber }) => {
     return null;
   }, [connectedWallet]);
 
-  const editBenefit = (
-    e:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLTextAreaElement>,
-    type: string
-  ) => {
-    if (type === 'name') {
-      setNewName(e.target.value);
-    } else if (type === 'description') {
-      setNewDescription(e.target.value);
-    }
-
-    return;
-  };
-
   const updateBenefit = async () => {
     if (newName.length === 0 || newDescription.length === 0) {
       alert('A benefit must have a name or description');
       return;
     }
-    if (newName.length > 42 || newDescription.length > 420) {
+    if (
+      newName.length > 42 ||
+      newDescription.length > 420 ||
+      newAccessLink.length > 420
+    ) {
       alert(
-        'Benefit name must be <= 42 chars and description must be <= 420 chars'
+        'Benefit name must be <= 42 chars and description & access link must be <= 420 chars'
       );
       return;
     }
 
-    if (newName === name && newDescription === description) {
+    if (
+      newName === name &&
+      newDescription === description &&
+      newAccessLink === accessLink
+    ) {
       return;
     }
 
@@ -93,14 +93,20 @@ const BenefitCard: React.FC<Props> = ({ name, description, benefitNumber }) => {
         program.programId
       );
 
-      await program.rpc.updateBenefit(newName, newDescription, benefitNumber, {
-        accounts: {
-          benefit: benefitPubKey,
-          creator: creatorPubKey,
-          authority: program.provider.wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        },
-      });
+      await program.rpc.updateBenefit(
+        newName,
+        newDescription,
+        newAccessLink,
+        benefitNumber,
+        {
+          accounts: {
+            benefit: benefitPubKey,
+            creator: creatorPubKey,
+            authority: program.provider.wallet.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+        }
+      );
     }
   };
 
@@ -115,16 +121,16 @@ const BenefitCard: React.FC<Props> = ({ name, description, benefitNumber }) => {
         <input
           className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
           value={newName}
-          onChange={(e) => editBenefit(e, 'name')}
+          onChange={(e) => setNewName(e.target.value)}
         ></input>
-        {/*
-        <button
+
+        {/* <button
           className="ml-8 w-20 rounded-xl bg-red-500 p-2"
           onClick={deleteBenefit}
         >
           Delete
-        </button>
-        */}
+        </button> */}
+
         <button
           className="ml-8 w-20 rounded-xl bg-green-500 p-2"
           onClick={updateBenefit}
@@ -135,10 +141,17 @@ const BenefitCard: React.FC<Props> = ({ name, description, benefitNumber }) => {
       <textarea
         className="m-2 block h-3/4 w-full resize-none rounded-xl bg-slate-200 p-1 text-primary"
         value={newDescription}
-        onChange={(e) => editBenefit(e, 'description')}
+        onChange={(e) => setNewDescription(e.target.value)}
       >
         {description}
       </textarea>
+
+      <input
+        className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
+        placeholder="Benefit access link"
+        value={newAccessLink}
+        onChange={(e) => setNewAccessLink(e.target.value)}
+      />
     </div>
   );
 };

@@ -100,7 +100,6 @@ const SignUp = () => {
           benefitSeeds,
           program.programId
         );
-
         txn.add(
           program.instruction.createBenefit(
             'Benefit Name',
@@ -113,18 +112,18 @@ const SignUp = () => {
                 authority: connectedWallet.publicKey,
                 systemProgram: anchor.web3.SystemProgram.programId,
               },
-              // No signers necessary: wallet and pda are implicit
+              signers: [],
             }
           )
         );
       }
 
 
-    router.push('/creator-hub');
+    
     await program.provider.send(txn, []);
+    router.push('/creator-hub');
     }
 
-    router.push('/creator-hub');
   }, [benefitRefs, connectedWallet, program, router]);
 
   return (

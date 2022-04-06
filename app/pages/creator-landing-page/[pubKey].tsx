@@ -26,6 +26,18 @@ import { connection, OPTS, PROGRAM_ID } from '../../utils/Connection';
 
 */
 
+// ADD STYLING FOR CREATOR LANDING PAGE
+
+/* 
+  1. log creator pubkey
+  2. use that as a param for testing
+  3. switch the creator pubkey variable instead of find program address, use the param
+  4. fetch the creator account from there
+  5. get the benefit account from that creatorpubkey
+
+  if not account is found, render "creator not found"
+*/
+
 const CreatorLandingPage = () => {
   const [benefitAccounts, updateBenefitAccount] = useState<Array<any>>([]);
   const [newCreatorAccount, setCreatorAccount] = useState<object>({});
@@ -58,8 +70,14 @@ const CreatorLandingPage = () => {
       creatorSeeds,
       program!.programId
     );
+    console.log(creatorPubKey.toBase58());
 
-    const creatorAccount = await program!.account.creator.fetch(creatorPubKey);
+    // route to different page if creator is not found from pubkey, create a new component from it
+    const creatorAccount = await ( pubKey == creatorPubKey.toBase58() ? program!.account.creator.fetch(pubKey) : null);
+    if (creatorAccount == null) {
+      router.replace('/creator-landing-page/creator-not-found');
+      
+    }
     setCreatorAccount(creatorAccount);
     const numBenefits = creatorAccount.numBenefits;
 

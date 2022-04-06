@@ -31,6 +31,7 @@ const CreatorLandingPage = () => {
   const [newCreatorAccount, setCreatorAccount] = useState<object>({});
   const router = useRouter();
   const pubKey = router.query.pubKey;
+  console.log(pubKey);
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
     if (connectedWallet) {
@@ -57,7 +58,6 @@ const CreatorLandingPage = () => {
       creatorSeeds,
       program!.programId
     );
-    console.log(creatorPubKey.toBase58());
 
     const creatorAccount = await program!.account.creator.fetch(creatorPubKey);
     setCreatorAccount(creatorAccount);
@@ -108,7 +108,6 @@ const CreatorLandingPage = () => {
       {/* dummy benefit boxes */}
       <div className="flex flex-col items-center">
         {benefitAccounts.map((account, i) => {
-          console.log(account);
           return (
             <div
               key={i + 1}

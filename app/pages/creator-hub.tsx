@@ -25,7 +25,6 @@ const connection = new anchor.web3.Connection(
 const CreatorHub = () => {
   const { user, fetchUserDetails } = useUser();
   const [benefits, setBenefits] = useState<Array<Benefit>>([]);
-  console.log('benefits', benefits);
 
   const usernameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -56,8 +55,6 @@ const CreatorHub = () => {
         program.programId
       );
 
-      console.log(user.creatorAccount);
-
       const benefitArray = [];
       for (let i = 1; i <= user.creatorAccount.numBenefits; i++) {
         const benefitNumber = `${i}`;
@@ -87,9 +84,6 @@ const CreatorHub = () => {
 
   const handleNewBenefit = async () => {
     if (connectedWallet && program) {
-      // Get new benefit number
-      // It's not this simple since we can delete a benefit in the middle...
-      console.log(benefits);
       const newBenefitNumber = `${benefits.length + 1}`;
 
       const creatorSeeds = [
@@ -126,6 +120,7 @@ const CreatorHub = () => {
         await program.rpc.createBenefit(
           newBenefit.name,
           newBenefit.description,
+          '', // access_link
           newBenefitNumber,
           {
             accounts: {
@@ -241,7 +236,7 @@ const CreatorHub = () => {
   return (
     <div className="flex h-full w-full flex-col items-center">
       {user.creatorAccount && (
-        <div className="prose mb-8 w-3/5 text-center">
+        <div className="prose mt-8 mb-8 w-3/5 text-center">
           <div>
             {!isEditingName ? (
               <h2 className="inline">{user.creatorAccount.username}</h2>
@@ -276,12 +271,15 @@ const CreatorHub = () => {
               </p>
             </div>
           </div>
-          <div className="flex justify-around">
-            <p>Revenue: $80000</p>
-            {user.subscriptions && (
-              <p>Subscribers: {user.subscriptions.length}</p>
-            )}
-          </div>
+          {user.subscriptions && (
+            <div className="flex justify-around">
+              <p>
+                Monthly Revenue: {Object.keys(user.subscriptions).length * 0.1}{' '}
+                SOL
+              </p>
+              <p>Subscribers: {Object.keys(user.subscriptions).length}</p>
+            </div>
+          )}
           <div>
             {!isEditingDescription ? (
               <p className="inline">{user.creatorAccount.description}</p>
@@ -320,7 +318,10 @@ const CreatorHub = () => {
           ))}
         </div>
       )}
-      <button className="btn btn-outline btn-sm mt-2 h-12 w-32">
+      <button
+        className="btn btn-outline btn-sm mt-2 h-12 w-32"
+        onClick={handleNewBenefit}
+      >
         Add Benefit
       </button>
     </div>

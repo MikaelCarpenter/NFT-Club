@@ -4,8 +4,8 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import * as anchor from '@project-serum/anchor';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 
-import IDL from '../../target/idl/nft_club.json';
-import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
+import IDL from '../../../target/idl/nft_club.json';
+import { connection, OPTS, PROGRAM_ID } from '../../utils/Connection';
 
 /*
   1.fetch a creator account

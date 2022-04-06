@@ -3,6 +3,7 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import * as anchor from '@project-serum/anchor';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { useRouter } from 'next/router';
 
 import IDL from '../../../target/idl/nft_club.json';
 import { connection, OPTS, PROGRAM_ID } from '../../utils/Connection';
@@ -19,10 +20,17 @@ import { connection, OPTS, PROGRAM_ID } from '../../utils/Connection';
 
 */
 
+/* 
+  1. use the pubkey in the params to fetch the creator account
+  2. get the benefit accounts from that creator account pubkey
+
+*/
+
 const CreatorLandingPage = () => {
   const [benefitAccounts, updateBenefitAccount] = useState<Array<any>>([]);
   const [newCreatorAccount, setCreatorAccount] = useState<object>({});
-  // useEffect hook
+  const router = useRouter();
+  const pubKey = router.query.pubKey;
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
     if (connectedWallet) {

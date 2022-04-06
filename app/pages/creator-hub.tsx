@@ -7,6 +7,7 @@ import IDL from '../../target/idl/nft_club.json';
 import { Benefit } from '../types/Benefit';
 import { useUser } from '../hooks/useUser';
 import BenefitCard from './components/BenefitCard';
+import { useRouter } from 'next/router';
 
 const PROGRAM_ID = new anchor.web3.PublicKey(
   'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
@@ -33,6 +34,8 @@ const CreatorHub = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
+
+  const router = useRouter();
 
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
@@ -236,73 +239,89 @@ const CreatorHub = () => {
   return (
     <div className="flex h-full w-full flex-col items-center">
       {user.creatorAccount && (
-        <div className="prose mt-8 mb-8 w-3/5 text-center">
-          <div>
-            {!isEditingName ? (
-              <h2 className="inline">{user.creatorAccount.username}</h2>
-            ) : (
-              <input
-                className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
-                defaultValue={user.creatorAccount.username}
-                ref={usernameRef}
-              ></input>
-            )}
-            <p
-              className="inline cursor-pointer pl-2 text-gray-400"
-              onClick={() => toggleEditCreator('username')}
-            >
-              {!isEditingName ? 'Edit' : 'Cancel'}
-            </p>
+        <div className="mt-4 mb-8 flex w-full flex-col-reverse items-center">
+          <div className="prose w-full justify-self-center text-center">
             <div>
-              {!isEditingEmail ? (
-                <p className="inline">{user.creatorAccount.email}</p>
+              {!isEditingName ? (
+                <h2 className="inline">{user.creatorAccount.username}</h2>
               ) : (
                 <input
                   className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
-                  defaultValue={user.creatorAccount.email}
-                  ref={emailRef}
+                  defaultValue={user.creatorAccount.username}
+                  ref={usernameRef}
                 ></input>
               )}
               <p
                 className="inline cursor-pointer pl-2 text-gray-400"
-                onClick={() => toggleEditCreator('email')}
+                onClick={() => toggleEditCreator('username')}
               >
-                {!isEditingEmail ? 'Edit' : 'Cancel'}
+                {!isEditingName ? 'Edit' : 'Cancel'}
+              </p>
+              <div>
+                {!isEditingEmail ? (
+                  <p className="inline">{user.creatorAccount.email}</p>
+                ) : (
+                  <input
+                    className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
+                    defaultValue={user.creatorAccount.email}
+                    ref={emailRef}
+                  ></input>
+                )}
+                <p
+                  className="inline cursor-pointer pl-2 text-gray-400"
+                  onClick={() => toggleEditCreator('email')}
+                >
+                  {!isEditingEmail ? 'Edit' : 'Cancel'}
+                </p>
+              </div>
+            </div>
+            {user.subscriptions && (
+              <div className="flex justify-around">
+                <p>
+                  Monthly Revenue:{' '}
+                  {Object.keys(user.subscriptions).length * 0.1} SOL
+                </p>
+                <p>Subscribers: {Object.keys(user.subscriptions).length}</p>
+              </div>
+            )}
+            <div>
+              {!isEditingDescription ? (
+                <p className="inline">{user.creatorAccount.description}</p>
+              ) : (
+                <input
+                  className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
+                  defaultValue={user.creatorAccount.description}
+                  ref={descriptionRef}
+                ></input>
+              )}
+              <p
+                className="inline cursor-pointer pl-2 text-gray-400"
+                onClick={() => toggleEditCreator('description')}
+              >
+                {!isEditingDescription ? 'Edit' : 'Cancel'}
               </p>
             </div>
+            <button
+              className="btn btn-outline btn-sm mt-2 h-12 w-32"
+              onClick={updateAccount}
+            >
+              Update Account
+            </button>
           </div>
-          {user.subscriptions && (
-            <div className="flex justify-around">
-              <p>
-                Monthly Revenue: {Object.keys(user.subscriptions).length * 0.1}{' '}
-                SOL
+          {connectedWallet && connectedWallet.publicKey && (
+            <div className="mr-8 self-end">
+              <p
+                className="cursor-pointer"
+                onClick={() =>
+                  router.push(
+                    `/creator-landing-page/${connectedWallet.publicKey.toBase58()}`
+                  )
+                }
+              >
+                View Landing Page {`\u2794`}
               </p>
-              <p>Subscribers: {Object.keys(user.subscriptions).length}</p>
             </div>
           )}
-          <div>
-            {!isEditingDescription ? (
-              <p className="inline">{user.creatorAccount.description}</p>
-            ) : (
-              <input
-                className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
-                defaultValue={user.creatorAccount.description}
-                ref={descriptionRef}
-              ></input>
-            )}
-            <p
-              className="inline cursor-pointer pl-2 text-gray-400"
-              onClick={() => toggleEditCreator('description')}
-            >
-              {!isEditingDescription ? 'Edit' : 'Cancel'}
-            </p>
-          </div>
-          <button
-            className="btn btn-outline btn-sm mt-2 h-12 w-32"
-            onClick={updateAccount}
-          >
-            Update Account
-          </button>
         </div>
       )}
       {benefits && benefits.length > 0 && (

@@ -25,6 +25,7 @@ const connection = new anchor.web3.Connection(
 const CreatorHub = () => {
   const { user, fetchUserDetails } = useUser();
   const [benefits, setBenefits] = useState<Array<Benefit>>([]);
+  console.log('benefits', benefits);
 
   const usernameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -117,6 +118,7 @@ const CreatorHub = () => {
         authority: creatorPubKey,
         bump,
         description: `Benefit ${newBenefitNumber} description`,
+        accessLink: '',
         name: `Benefit ${newBenefitNumber} Name`,
       };
 
@@ -312,14 +314,13 @@ const CreatorHub = () => {
               key={`${index + 1}`}
               name={benefit.name}
               description={benefit.description}
+              accessLink={benefit.accessLink}
               benefitNumber={`${index + 1}`}
             />
           ))}
         </div>
       )}
-      <button
-        className="btn btn-outline btn-sm mt-2 h-12 w-32"
-      >
+      <button className="btn btn-outline btn-sm mt-2 h-12 w-32">
         Add Benefit
       </button>
     </div>

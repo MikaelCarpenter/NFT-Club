@@ -27,8 +27,18 @@ pub fn create_benefit(
     Ok(())
 }
 
-pub fn delete_benefit(ctx: Context<DeleteBenefit>,  _benefit_number: String) -> Result<()> {
+// Replaces benefit to delete with the last benefit, then deletes the last benefit
+pub fn delete_benefit(ctx: Context<DeleteBenefit>,  benefit_to_replace: String, last_benefit: String) -> Result<()> {
     let creator: &mut Account<Creator> = &mut ctx.accounts.creator;
+    let old_benefit: &mut Account<Benefit> = &mut ctx.accounts.benefit_old;
+    let benefit_last = &mut ctx.accounts.benefit_last;
+
+    // Check if benefit_to_replace is last_benefit
+    if !(benefit_to_replace == last_benefit) {
+        old_benefit.name = benefit_last.name.clone();
+        old_benefit.description = benefit_last.description.clone();
+        old_benefit.access_link = benefit_last.access_link.clone();
+    }
 
     // Try to decrement. If overflow, panic will propagate an error
     creator.num_benefits = creator.num_benefits.checked_sub(1).unwrap();
@@ -95,11 +105,14 @@ pub struct CreateBenefit<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(benefit_number: String)]
+#[instruction(benefit_to_replace: String, last_benefit: String)]
 pub struct DeleteBenefit<'info> {
     // Create account of type Benefit and assign creator's pubkey as the payer
-    #[account(mut, has_one = authority, seeds=[creator.key().as_ref(), b"benefit", benefit_number.as_bytes()], bump=benefit.bump, close=authority)]
-    pub benefit: Account<'info, Benefit>,
+    #[account(mut, has_one = authority, seeds=[creator.key().as_ref(), b"benefit", benefit_to_replace.as_bytes()], bump=benefit_old.bump)]
+    pub benefit_old: Account<'info, Benefit>,
+
+    #[account(mut, has_one = authority, seeds=[creator.key().as_ref(), b"benefit", last_benefit.as_bytes()], bump=benefit_last.bump, close=authority)]
+    pub benefit_last: Account<'info, Benefit>,
 
     // Guarantee that account is both signed by authority
     // and that &creator.authority == authority.key

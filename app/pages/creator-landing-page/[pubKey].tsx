@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import * as anchor from '@project-serum/anchor';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/router';
-
 import IDL from '../../../target/idl/nft_club.json';
 import { connection, OPTS, PROGRAM_ID } from '../../utils/Connection';
 
@@ -43,8 +42,7 @@ const CreatorLandingPage = () => {
   const [newCreatorAccount, setCreatorAccount] = useState<object>({});
   const router = useRouter();
   const pubKey = router.query.pubKey;
-  console.log(pubKey);
-  let creatorNotFound = false;
+  const [creatorNotFound, setCreatorNotFound] = useState<boolean>(false);
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
     if (connectedWallet) {
@@ -63,63 +61,50 @@ const CreatorLandingPage = () => {
   }, [connectedWallet, program]);
 
   const fetchCreatorAndBenefitAccounts = async () => {
-    const creatorSeeds = [
-      connectedWallet!.publicKey.toBuffer(),
-      Buffer.from('creator'),
-    ];
-    const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
-      creatorSeeds,
-      program!.programId
-    );
-    console.log(creatorPubKey.toBase58());
 
-    // route to different page if creator is not found from pubkey, create a new component from it
-    try{
-    const creatorAccount = await program!.account.creator.fetch(pubKey)
-    // if (!creatorAccount) creatorNotFound = true;
+    // valid pubkey: 6LoaneMG22ZkeYtcptkUqF488sgSJkNMQmCkYwyNh13W
+    try {
+      const creatorAccount = await program!.account.creator.fetch(pubKey);
+      setCreatorAccount(creatorAccount);
+      const numBenefits = creatorAccount.numBenefits;
+      const newPubKey = new anchor.web3.PublicKey(pubKey);
+      for (let i = 0; i < numBenefits; i++) {
+        const benefitNumber = Buffer.from(`${i + 1}`);
+        const benefitSeeds = [
+          newPubKey.toBuffer(),
+          Buffer.from('benefit'),
+          Buffer.from(benefitNumber),
+        ];
 
-    } catch(err) {
-      console.log(err);
-      creatorNotFound = true;
-      if (creatorNotFound)
-      return (
-        <div>
-          <h1>Error: Creator Not Found</h1>
-          <div>
-            <p>afwaofjawofwajfo</p>
-          </div>
-        </div>
-      );
-    }
-    
-    setCreatorAccount(creatorAccount);
-    const numBenefits = creatorAccount.numBenefits;
-
-    for (let i = 0; i < numBenefits; i++) {
-      const benefitNumber = Buffer.from(`${i + 1}`);
-      const benefitSeeds = [
-        creatorPubKey.toBuffer(),
-        Buffer.from('benefit'),
-        Buffer.from(benefitNumber),
-      ];
-
-      const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
-        benefitSeeds,
-        program!.programId
-      );
-      const benefitAccount = await program!.account.benefit.fetch(
-        benefitPubKey
-      );
-      if (!benefitAccounts.includes(benefitAccount)) {
-        updateBenefitAccount((benefitAccounts) => [
-          ...benefitAccounts,
-          benefitAccount,
-        ]);
+        const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+          benefitSeeds,
+          program!.programId
+        );
+        const benefitAccount = await program!.account.benefit.fetch(
+          benefitPubKey
+        );
+        if (!benefitAccounts.includes(benefitAccount)) {
+          updateBenefitAccount((benefitAccounts) => [
+            ...benefitAccounts,
+            benefitAccount,
+          ]);
+        }
       }
+    } catch (err) {
+      console.log(err);
+      setCreatorNotFound(true);
     }
 
     return benefitAccounts;
   };
+
+  if (creatorNotFound) {
+    return (
+      <div>
+        <h1 className="text-black">Error: Creator Not Found</h1>
+      </div>
+    );
+  }
 
   return (
     <div>

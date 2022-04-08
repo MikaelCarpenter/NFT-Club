@@ -3,9 +3,9 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import * as anchor from '@project-serum/anchor';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
-
-import IDL from '../../target/idl/nft_club.json';
-import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
+import { useRouter } from 'next/router';
+import IDL from '../../../target/idl/nft_club.json';
+import { connection, OPTS, PROGRAM_ID } from '../../utils/Connection';
 
 /*
   1.fetch a creator account
@@ -19,10 +19,30 @@ import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 
 */
 
+/* 
+  1. use the pubkey in the params to fetch the creator account
+  2. get the benefit accounts from that creator account pubkey
+
+*/
+
+// ADD STYLING FOR CREATOR LANDING PAGE
+
+/* 
+  1. log creator pubkey
+  2. use that as a param for testing
+  3. switch the creator pubkey variable instead of find program address, use the param
+  4. fetch the creator account from there
+  5. get the benefit account from that creatorpubkey
+
+  if not account is found, render "creator not found"
+*/
+
 const CreatorLandingPage = () => {
   const [benefitAccounts, updateBenefitAccount] = useState<Array<any>>([]);
   const [newCreatorAccount, setCreatorAccount] = useState<object>({});
-  // useEffect hook
+  const router = useRouter();
+  const pubKey = router.query.pubKey;
+  const [creatorNotFound, setCreatorNotFound] = useState<boolean>(false);
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
     if (connectedWallet) {
@@ -41,45 +61,50 @@ const CreatorLandingPage = () => {
   }, [connectedWallet, program]);
 
   const fetchCreatorAndBenefitAccounts = async () => {
-    const creatorSeeds = [
-      connectedWallet!.publicKey.toBuffer(),
-      Buffer.from('creator'),
-    ];
-    const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
-      creatorSeeds,
-      program!.programId
-    );
-    console.log(creatorPubKey.toBase58());
 
-    const creatorAccount = await program!.account.creator.fetch(creatorPubKey);
-    setCreatorAccount(creatorAccount);
-    const numBenefits = creatorAccount.numBenefits;
+    // valid pubkey: 6LoaneMG22ZkeYtcptkUqF488sgSJkNMQmCkYwyNh13W
+    try {
+      const creatorAccount = await program!.account.creator.fetch(pubKey);
+      setCreatorAccount(creatorAccount);
+      const numBenefits = creatorAccount.numBenefits;
+      const newPubKey = new anchor.web3.PublicKey(pubKey);
+      for (let i = 0; i < numBenefits; i++) {
+        const benefitNumber = Buffer.from(`${i + 1}`);
+        const benefitSeeds = [
+          newPubKey.toBuffer(),
+          Buffer.from('benefit'),
+          Buffer.from(benefitNumber),
+        ];
 
-    for (let i = 0; i < numBenefits; i++) {
-      const benefitNumber = Buffer.from(`${i + 1}`);
-      const benefitSeeds = [
-        creatorPubKey.toBuffer(),
-        Buffer.from('benefit'),
-        Buffer.from(benefitNumber),
-      ];
-
-      const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
-        benefitSeeds,
-        program!.programId
-      );
-      const benefitAccount = await program!.account.benefit.fetch(
-        benefitPubKey
-      );
-      if (!benefitAccounts.includes(benefitAccount)) {
-        updateBenefitAccount((benefitAccounts) => [
-          ...benefitAccounts,
-          benefitAccount,
-        ]);
+        const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+          benefitSeeds,
+          program!.programId
+        );
+        const benefitAccount = await program!.account.benefit.fetch(
+          benefitPubKey
+        );
+        if (!benefitAccounts.includes(benefitAccount)) {
+          updateBenefitAccount((benefitAccounts) => [
+            ...benefitAccounts,
+            benefitAccount,
+          ]);
+        }
       }
+    } catch (err) {
+      console.log(err);
+      setCreatorNotFound(true);
     }
 
     return benefitAccounts;
   };
+
+  if (creatorNotFound) {
+    return (
+      <div>
+        <h1 className="text-black">Error: Creator Not Found</h1>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -100,7 +125,6 @@ const CreatorLandingPage = () => {
       {/* dummy benefit boxes */}
       <div className="flex flex-col items-center">
         {benefitAccounts.map((account, i) => {
-          console.log(account);
           return (
             <div
               key={i + 1}

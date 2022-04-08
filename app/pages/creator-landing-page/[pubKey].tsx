@@ -44,6 +44,7 @@ const CreatorLandingPage = () => {
   const router = useRouter();
   const pubKey = router.query.pubKey;
   console.log(pubKey);
+  let creatorNotFound = false;
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
     if (connectedWallet) {
@@ -73,11 +74,24 @@ const CreatorLandingPage = () => {
     console.log(creatorPubKey.toBase58());
 
     // route to different page if creator is not found from pubkey, create a new component from it
-    const creatorAccount = await ( pubKey == creatorPubKey.toBase58() ? program!.account.creator.fetch(pubKey) : null);
-    if (creatorAccount == null) {
-      router.replace('/creator-landing-page/creator-not-found');
-      
+    try{
+    const creatorAccount = await program!.account.creator.fetch(pubKey)
+    // if (!creatorAccount) creatorNotFound = true;
+
+    } catch(err) {
+      console.log(err);
+      creatorNotFound = true;
+      if (creatorNotFound)
+      return (
+        <div>
+          <h1>Error: Creator Not Found</h1>
+          <div>
+            <p>afwaofjawofwajfo</p>
+          </div>
+        </div>
+      );
     }
+    
     setCreatorAccount(creatorAccount);
     const numBenefits = creatorAccount.numBenefits;
 

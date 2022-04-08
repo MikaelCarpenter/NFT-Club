@@ -2,9 +2,10 @@ import * as anchor from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 import { useRouter } from 'next/router';
 import { FC } from 'react';
+import { SubscriptionsMap } from '../../types/SubscriptionsMap';
 
 interface SubscriptionsType {
-  subscriptions: Record<string, Record<string, unknown>>;
+  subscriptions: SubscriptionsMap;
   updateSubscription(
     creatorPubKey: anchor.web3.PublicKey,
     creatorSolKey: anchor.web3.PublicKey
@@ -41,7 +42,7 @@ const Subscriptions: FC<SubscriptionsType> = ({
                     <div className="badge badge-accent">ACTIVE</div>
                   )}
                 </h2>
-                <p>{subscription.creator.description}</p>
+                <p>{subscription.creator.description as string}</p>
                 <div className="card-actions justify-end">
                   <button
                     className="btn btn-primary"

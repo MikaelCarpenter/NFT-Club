@@ -151,8 +151,8 @@ const CreatorsPage: NextPage = () => {
           update(user, {
             subscriptions: {
               [creatorPubKey.toBase58()]: {
-                $set: {
-                  account: {
+                account: {
+                  $set: {
                     expireTimeStamp: Date.now() / 1000 + 30 * 24 * 60 * 60,
                   },
                 },

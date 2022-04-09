@@ -1,9 +1,10 @@
 import React, { Dispatch, SetStateAction } from 'react';
 import { Creator } from '../types/Creator';
+import { SubscriptionsMap } from '../types/SubscriptionsMap';
 
 type UserContextType = {
   creatorAccount: Creator | null;
-  subscriptions: Record<string, Record<string, unknown>>;
+  subscriptions: SubscriptionsMap;
   isLoading: boolean;
 };
 

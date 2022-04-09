@@ -1,4 +1,5 @@
 import * as anchor from '@project-serum/anchor';
+import { ProgramAccount } from '@project-serum/anchor';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import {
   FC,
@@ -10,6 +11,7 @@ import {
 } from 'react';
 import { IDL, NftClub } from '../../target/types/nft_club';
 import { CreatorsContext } from '../hooks/useCreators';
+import { Creator } from '../types/Creator';
 import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 
 export interface CreatorsProviderProps {
@@ -18,7 +20,7 @@ export interface CreatorsProviderProps {
 
 export const CreatorsProvider: FC<CreatorsProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [creators, setCreators] = useState<Record<string, unknown>[]>([]);
+  const [creators, setCreators] = useState<ProgramAccount<Creator>[]>([]);
 
   const wallet = useAnchorWallet();
 

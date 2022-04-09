@@ -1,7 +1,9 @@
+import { ProgramAccount } from '@project-serum/anchor';
 import { createContext, useContext } from 'react';
+import { Creator } from '../types/Creator';
 
 export interface CreatorsState {
-  creators: Record<string, unknown>[];
+  creators: ProgramAccount<Creator>[];
   isLoading: boolean;
 }
 

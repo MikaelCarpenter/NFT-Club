@@ -1,10 +1,4 @@
-import { PublicKey } from '@solana/web3.js';
+import { IdlAccounts } from '@project-serum/anchor';
+import { NftClub } from '../../target/types/nft_club';
 
-export type Creator = {
-  username: string;
-  authority: PublicKey,
-  email: string;
-  description: string;
-  numBenefits: number;
-  bump: number;
-};
+export type Creator = IdlAccounts<NftClub>['creator'];

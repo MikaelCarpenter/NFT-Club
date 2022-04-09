@@ -6,6 +6,7 @@ import { UserContext } from '../contexts/User';
 import { IDL, NftClub } from '../../target/types/nft_club';
 import { connection, OPTS, PROGRAM_ID } from '../utils/Connection';
 import { Creator } from '../types/Creator';
+import { SubscriptionsMap } from '../types/SubscriptionsMap';
 
 export const useUser = () => {
   const { user, setUser } = useContext(UserContext);
@@ -59,7 +60,7 @@ export const useUser = () => {
     async (
       nftClubProgram: anchor.Program<NftClub>,
       wallet: AnchorWallet
-    ): Promise<Record<string, Record<string, unknown>>> => {
+    ): Promise<SubscriptionsMap> => {
       const subscriptions = await nftClubProgram.account.subscription.all([
         {
           memcmp: {
@@ -106,10 +107,10 @@ export const useUser = () => {
         })
       );
 
-      const subscriptionsMap: Record<string, Record<string, unknown>> = {};
+      const subscriptionsMap: SubscriptionsMap = {};
 
       newSubscriptions.forEach((sub) => {
-        subscriptionsMap[sub.account.creator.toBase58()] = sub.account;
+        subscriptionsMap[sub.account.creator.toBase58()] = sub;
       });
 
       return subscriptionsMap;

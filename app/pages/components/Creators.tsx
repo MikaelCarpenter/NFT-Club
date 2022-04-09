@@ -1,11 +1,14 @@
 import * as anchor from '@project-serum/anchor';
+import { ProgramAccount } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 import { useRouter } from 'next/router';
 import { FC } from 'react';
+import { Creator } from '../../types/Creator';
+import { SubscriptionsMap } from '../../types/SubscriptionsMap';
 
 interface CreatorsType {
-  creators: Record<string, unknown>[];
-  subscriptions: Record<string, Record<string, unknown>>;
+  creators: ProgramAccount<Creator>[];
+  subscriptions: SubscriptionsMap;
   subscribeToCreator(
     creatorPubKey: anchor.web3.PublicKey,
     creatorSolKey: anchor.web3.PublicKey
@@ -53,7 +56,7 @@ const Creators: FC<CreatorsType> = ({
                       <div className="badge badge-accent">ACTIVE</div>
                     ))}
                 </h2>
-                <p>{creator.account.description}</p>
+                <p>{creator.account.description as string}</p>
                 <div className="card-actions justify-end">
                   <button
                     className="btn btn-primary"

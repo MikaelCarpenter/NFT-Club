@@ -13,7 +13,7 @@ const Navbar = () => {
         <Link href="/">NFT Club</Link>
       </div>
       <div className="flex-none">
-        <ul className="menu menu-horizontal p-0">
+        <ul className="menu menu-horizontal h-16 p-0">
           {!isLoading && (
             <>
               {Object.keys(subscriptions).length > 0 && (

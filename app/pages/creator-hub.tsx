@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor';
 import { ConfirmOptions } from '@solana/web3.js';
-import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import IDL from '../../target/idl/nft_club.json';
@@ -34,10 +34,14 @@ const CreatorHub = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [creatorAccountPDA, setCreatorAccountPDA] = useState<string | null>(
+    null
+  );
 
   const router = useRouter();
 
   const connectedWallet = useAnchorWallet();
+
   const program = useMemo(() => {
     if (connectedWallet) {
       const provider = new anchor.Provider(connection, connectedWallet, OPTS);
@@ -46,6 +50,29 @@ const CreatorHub = () => {
 
     return null;
   }, [connectedWallet]);
+
+  useEffect(() => {
+    const getCreatorAccountPDA = async (
+      connectedWallet: AnchorWallet,
+      program: anchor.Program<anchor.Idl>
+    ) => {
+      const creatorSeeds = [
+        connectedWallet.publicKey.toBuffer(),
+        Buffer.from('creator'),
+      ];
+
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      setCreatorAccountPDA(creatorPubKey.toBase58());
+    };
+
+    if (connectedWallet && program) {
+      getCreatorAccountPDA(connectedWallet, program);
+    }
+  }, [connectedWallet, program]);
 
   const getBenefits = useCallback(async () => {
     if (connectedWallet && user && user.creatorAccount && program) {
@@ -308,14 +335,12 @@ const CreatorHub = () => {
               Update Account
             </button>
           </div>
-          {connectedWallet && connectedWallet.publicKey && (
+          {creatorAccountPDA && (
             <div className="mr-8 self-end">
               <p
                 className="cursor-pointer"
                 onClick={() =>
-                  router.push(
-                    `/creator-landing-page/${connectedWallet.publicKey.toBase58()}`
-                  )
+                  router.push(`/creator-landing-page/${creatorAccountPDA}`)
                 }
               >
                 View Landing Page {`\u2794`}

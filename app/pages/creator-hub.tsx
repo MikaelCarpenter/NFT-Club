@@ -26,6 +26,8 @@ const connection = new anchor.web3.Connection(
 const CreatorHub = () => {
   const { user, fetchUserDetails } = useUser();
   const [benefits, setBenefits] = useState<Array<Benefit>>([]);
+  const [hasCompletedInitialFetch, setHasCompletedInitialFetch] =
+    useState(false);
 
   const usernameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -76,6 +78,7 @@ const CreatorHub = () => {
 
   const getBenefits = useCallback(async () => {
     if (connectedWallet && user && user.creatorAccount && program) {
+      setHasCompletedInitialFetch(true);
       const creatorSeeds = [
         connectedWallet.publicKey.toBuffer(),
         Buffer.from('creator'),
@@ -173,10 +176,16 @@ const CreatorHub = () => {
   };
 
   useEffect(() => {
-    if (connectedWallet && program && user && user.creatorAccount) {
+    if (
+      connectedWallet &&
+      program &&
+      user &&
+      user.creatorAccount &&
+      !hasCompletedInitialFetch
+    ) {
       getBenefits();
     }
-  }, [connectedWallet, program, user, getBenefits]);
+  }, [connectedWallet, program, user, getBenefits, hasCompletedInitialFetch]);
 
   const updateAccount = async () => {
     if (!user || !user.creatorAccount) {

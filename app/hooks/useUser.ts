@@ -145,7 +145,13 @@ export const useUser = () => {
 
   useEffect(
     () => {
-      if (connectedWallet && program) {
+      if (
+        connectedWallet &&
+        program &&
+        !user.isLoading &&
+        !user.creatorAccount &&
+        Object.keys(user.subscriptions).length === 0
+      ) {
         fetchUserDetails();
       }
     },

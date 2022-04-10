@@ -11,7 +11,7 @@ type UserContextType = {
 const defaultUser: UserContextType = {
   creatorAccount: null,
   subscriptions: {},
-  isLoading: true,
+  isLoading: false,
 };
 
 const defaultSetUser: Dispatch<SetStateAction<UserContextType>> = () => {};

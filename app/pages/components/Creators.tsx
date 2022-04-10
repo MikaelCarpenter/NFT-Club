@@ -1,8 +1,10 @@
+import Image from 'next/image';
 import * as anchor from '@project-serum/anchor';
-import { ProgramAccount } from '@project-serum/anchor';
-import { PublicKey } from '@solana/web3.js';
-import { useRouter } from 'next/router';
 import { FC } from 'react';
+import { useRouter } from 'next/router';
+import { PublicKey } from '@solana/web3.js';
+import { ProgramAccount } from '@project-serum/anchor';
+
 import { Creator } from '../../types/Creator';
 import { SubscriptionsMap } from '../../types/SubscriptionsMap';
 
@@ -28,9 +30,10 @@ const Creators: FC<CreatorsType> = ({
   const router = useRouter();
 
   return (
-    <div className="prose max-w-none lg:prose-xl">
-      <h1 className="px-10">Creators On This Network</h1>
-      <div className="grid grid-cols-1 px-10 py-5 md:grid-cols-3">
+    <div className="flex h-full w-full flex-col items-center">
+      <h1 className="prose mt-4 text-xl font-bold">Creators On This Network</h1>
+
+      <div className="grid grid-cols-1 gap-4 overflow-y-auto px-10 py-5 md:grid-cols-3">
         {creators.map((creator, key) => {
           const creatorPubKey = creator.publicKey.toBase58();
           const subscription = subscriptions[creatorPubKey];
@@ -38,12 +41,21 @@ const Creators: FC<CreatorsType> = ({
             ? subscription.account.expireTimestamp.toNumber() * 1000 <
               Date.now()
             : true;
+
           return (
-            <div className="card my-3 w-96 bg-base-100 shadow-xl" key={key}>
+            <div
+              className="card h-max cursor-pointer bg-base-100 drop-shadow-xl hover:drop-shadow-xl-primary"
+              key={key}
+              onClick={() => {
+                router.push(`/creator-landing-page/${creatorPubKey}`);
+              }}
+            >
               <figure>
-                <img
-                  src="https://api.lorem.space/image/shoes?w=400&h=225"
+                <Image
                   alt="Shoes"
+                  src="https://api.lorem.space/image/shoes?w=400&h=225"
+                  width={400}
+                  height={225}
                 />
               </figure>
               <div className="card-body">

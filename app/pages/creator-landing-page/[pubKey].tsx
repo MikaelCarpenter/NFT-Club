@@ -1,49 +1,28 @@
-// benefit box component
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { useState, useMemo, useCallback, useEffect } from 'react';
 import * as anchor from '@project-serum/anchor';
-import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/router';
+import { useState, useMemo, useEffect } from 'react';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
+
 import IDL from '../../../target/idl/nft_club.json';
 import { connection, OPTS, PROGRAM_ID } from '../../utils/Connection';
-
-/*
-  1.fetch a creator account
-  2. fetch each benefit account for the creator account
-  3. display the info by default (use state and render)
-
-  4. user needs to connect their wallet
-  5. if they are a subscriber we need to connect them to the benefits
-  6. if they are not a subscriber, give them a button to let them subscribe and do the transaction
-
-
-*/
-
-/* 
-  1. use the pubkey in the params to fetch the creator account
-  2. get the benefit accounts from that creator account pubkey
-
-*/
-
-// ADD STYLING FOR CREATOR LANDING PAGE
-
-/* 
-  1. log creator pubkey
-  2. use that as a param for testing
-  3. switch the creator pubkey variable instead of find program address, use the param
-  4. fetch the creator account from there
-  5. get the benefit account from that creatorpubkey
-
-  if not account is found, render "creator not found"
-*/
+import { Creator } from '../../types/Creator';
+import { Benefit } from '../../types/Benefit';
+import { useUser } from '../../hooks/useUser';
 
 const CreatorLandingPage = () => {
-  const [benefitAccounts, updateBenefitAccount] = useState<Array<any>>([]);
-  const [newCreatorAccount, setCreatorAccount] = useState<object>({});
   const router = useRouter();
   const pubKey = router.query.pubKey;
-  const [creatorNotFound, setCreatorNotFound] = useState<boolean>(false);
   const connectedWallet = useAnchorWallet();
+
+  const { connectedWalletPubkey } = useUser();
+
+  const [benefitAccounts, setBenefitAccounts] = useState<Benefit[]>([]);
+  const [creatorNotFound, setCreatorNotFound] = useState<boolean>(false);
+  const [currentCreator, setCurrentCreator] = useState<Creator | null>(null);
+
+  const hasAccess =
+    connectedWalletPubkey === currentCreator?.authority.toBase58();
+
   const program = useMemo(() => {
     if (connectedWallet) {
       const provider = new anchor.Provider(connection, connectedWallet, OPTS);
@@ -58,16 +37,23 @@ const CreatorLandingPage = () => {
     if (program && connectedWallet) {
       fetchCreatorAndBenefitAccounts();
     }
+    // only want to fetch this once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectedWallet, program]);
 
   const fetchCreatorAndBenefitAccounts = async () => {
+    if (!program || typeof pubKey !== 'string') return;
 
-    // valid pubkey: 6LoaneMG22ZkeYtcptkUqF488sgSJkNMQmCkYwyNh13W
     try {
-      const creatorAccount = await program!.account.creator.fetch(pubKey);
-      setCreatorAccount(creatorAccount);
+      const creatorAccount = await program.account.creator.fetch(pubKey);
+
+      setCurrentCreator(creatorAccount as Creator);
+
       const numBenefits = creatorAccount.numBenefits;
       const newPubKey = new anchor.web3.PublicKey(pubKey);
+
+      const benefits = [];
+
       for (let i = 0; i < numBenefits; i++) {
         const benefitNumber = Buffer.from(`${i + 1}`);
         const benefitSeeds = [
@@ -78,18 +64,16 @@ const CreatorLandingPage = () => {
 
         const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
           benefitSeeds,
-          program!.programId
+          program.programId
         );
-        const benefitAccount = await program!.account.benefit.fetch(
+        const benefitAccount = await program.account.benefit.fetch(
           benefitPubKey
         );
-        if (!benefitAccounts.includes(benefitAccount)) {
-          updateBenefitAccount((benefitAccounts) => [
-            ...benefitAccounts,
-            benefitAccount,
-          ]);
-        }
+
+        benefits.push(benefitAccount as Benefit);
       }
+
+      setBenefitAccounts(benefits);
     } catch (err) {
       console.log(err);
       setCreatorNotFound(true);
@@ -98,7 +82,7 @@ const CreatorLandingPage = () => {
     return benefitAccounts;
   };
 
-  if (creatorNotFound) {
+  if (creatorNotFound || !currentCreator) {
     return (
       <div>
         <h1 className="text-black">Error: Creator Not Found</h1>
@@ -107,76 +91,43 @@ const CreatorLandingPage = () => {
   }
 
   return (
-    <div>
+    <div className="flex flex-col items-center">
       <div className="text-center">
         <h1 className="mt-0 mb-2 text-4xl font-medium leading-tight text-black">
-          {newCreatorAccount.username}
+          {currentCreator.username}
         </h1>
       </div>
       <div className="flex flex-col items-center">
         <div className="w-96">
           <article className="prose-sm">
             <p className="text-center font-light text-black">
-              {newCreatorAccount.description}
+              {currentCreator.description}
             </p>
           </article>
         </div>
       </div>
-      {/* dummy benefit boxes */}
-      <div className="flex flex-col items-center">
-        {benefitAccounts.map((account, i) => {
+
+      <div className="flex w-1/3 flex-col items-center">
+        {benefitAccounts.map((benefit, i) => {
           return (
             <div
               key={i + 1}
-              className="my-4 box-border h-28 w-3/5 border-2  border-black p-2"
+              className="card card-bordered my-4 w-full border-slate-300 p-4 drop-shadow-lg"
             >
-              <div>
-                <p className="top-0 left-0 font-medium text-black">Benefit</p>
-              </div>
-              <div className="col flex flex items-center justify-center">
-                <p className="text-center text-black">
-                  <div>
-                    <p className="text-center font-light text-black">
-                      {account.name}
-                    </p>
-                    <p className="text-center font-light text-black">
-                      {account.description}
-                    </p>
-                  </div>
-                </p>
+              <div className="col flex flex-col items-start">
+                <p className="prose font-semibold">{benefit.name}</p>
+                <p className="prose">{benefit.description}</p>
+                {hasAccess && (
+                  <a href={benefit.accessLink} className="mt-4 w-full">
+                    <button className="btn btn-primary btn-sm btn-block">
+                      Go to Benefit
+                    </button>
+                  </a>
+                )}
               </div>
             </div>
           );
         })}
-        {/* lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
-              quos quaerat, doloremque, */}
-
-        {/* <div className="my-4 box-border h-28 w-3/5 border-2  border-black p-2">
-          <div>
-            <p className="top-0 left-0 font-medium text-black">Benefit</p>
-          </div>
-          <div className="col flex flex items-center justify-center">
-            <p className="text-center text-black">
-              lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
-              quos quaerat, doloremque,
-            </p>
-          </div>
-        </div> */}
-        {/* <div className="my-4 box-border h-28 w-3/5 border-2  border-black p-2">
-          <div>
-            <p className="top-0 left-0 font-medium text-black">Benefit</p>
-          </div>
-          <div className="col flex flex items-center justify-center">
-            <p className="text-center text-black">
-              lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
-              quos quaerat, doloremque,
-            </p>
-          </div>
-        </div> */}
-      </div>
-      {/* dummy benefit boxes */}
-      <div className="top-7/8 bg-bg-primary fixed left-1/2 -translate-x-1/2 -translate-y-1/4 transform rounded-xl">
-        <WalletMultiButton />
       </div>
     </div>
   );

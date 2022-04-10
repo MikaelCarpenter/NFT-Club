@@ -34,14 +34,20 @@ const Home: NextPage = () => {
           </div>
           <div className="prose flex flex-1 items-center justify-center">
             <p className="p-8 text-center">
-              Here's a big mass of text. Cool... Here's a big mass of text.
-              Cool...Here's a big mass of text. Cool...Here's a big mass of
-              text. Cool...Here's a big mass of text. Cool... Here's a big mass
-              of text.
+              This is an application powered by a{' '}
+              <span className="font-semibold text-primary">Solana</span> Program
+              to allow any creator to create a club for their fans directly,
+              without a traditional platform in the middle dictating what is or
+              is not allowed or taking a cut of the revenue.
               <br />
-              <br />
-              We're gonna talk about how sick our product is. And you're all
-              gonna love it.
+              <br />A{' '}
+              <span className="font-semibold text-primary">Creator</span> can
+              describe the list of{' '}
+              <span className="font-semibold text-primary">Benefits</span> that
+              they offer to fans. Fans can subscribe to a Creator by connecting
+              their wallet and paying in SOL. Once subscribed, they will be able
+              to access links provided by the Creator to access content anywhere
+              on the web.
             </p>
           </div>
         </div>

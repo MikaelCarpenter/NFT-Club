@@ -28,6 +28,9 @@ const tailwindConfig = {
           },
         },
       },
+      dropShadow: {
+        'xl-primary': '0 8px 5px rgba(87, 13, 248, 0.42)',
+      }
     },
   },
 };

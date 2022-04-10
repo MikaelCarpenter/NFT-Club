@@ -155,6 +155,7 @@ export const useUser = () => {
   );
 
   return {
+    connectedWalletPubkey: connectedWallet?.publicKey.toBase58(),
     user,
     setUser,
     fetchUserDetails,

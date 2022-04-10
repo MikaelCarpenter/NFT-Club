@@ -7,15 +7,21 @@ import IDL from '../../../target/idl/nft_club.json';
 import { connection, OPTS, PROGRAM_ID } from '../../utils/Connection';
 import { Creator } from '../../types/Creator';
 import { Benefit } from '../../types/Benefit';
+import { useUser } from '../../hooks/useUser';
 
 const CreatorLandingPage = () => {
   const router = useRouter();
   const pubKey = router.query.pubKey;
   const connectedWallet = useAnchorWallet();
 
+  const { connectedWalletPubkey } = useUser();
+
   const [benefitAccounts, setBenefitAccounts] = useState<Benefit[]>([]);
   const [creatorNotFound, setCreatorNotFound] = useState<boolean>(false);
   const [currentCreator, setCurrentCreator] = useState<Creator | null>(null);
+
+  const hasAccess =
+    connectedWalletPubkey === currentCreator?.authority.toBase58();
 
   const program = useMemo(() => {
     if (connectedWallet) {
@@ -85,7 +91,7 @@ const CreatorLandingPage = () => {
   }
 
   return (
-    <div>
+    <div className="flex flex-col items-center">
       <div className="text-center">
         <h1 className="mt-0 mb-2 text-4xl font-medium leading-tight text-black">
           {currentCreator.username}
@@ -101,25 +107,23 @@ const CreatorLandingPage = () => {
         </div>
       </div>
 
-      <div className="flex flex-col items-center">
-        {benefitAccounts.map((account, i) => {
+      <div className="flex w-1/3 flex-col items-center">
+        {benefitAccounts.map((benefit, i) => {
           return (
             <div
               key={i + 1}
-              className="my-4 box-border h-28 w-3/5 border-2  border-black p-2"
+              className="card card-bordered my-4 w-full border-slate-300 p-4 drop-shadow-lg"
             >
-              <div>
-                <p className="top-0 left-0 font-medium text-black">Benefit</p>
-              </div>
-              <div className="col flex items-center justify-center">
-                <div className="text-center text-black">
-                  <p className="text-center font-light text-black">
-                    {account.name}
-                  </p>
-                  <p className="text-center font-light text-black">
-                    {account.description}
-                  </p>
-                </div>
+              <div className="col flex flex-col items-start">
+                <p className="prose font-semibold">{benefit.name}</p>
+                <p className="prose">{benefit.description}</p>
+                {hasAccess && (
+                  <a href={benefit.accessLink} className="mt-4 w-full">
+                    <button className="btn btn-primary btn-sm btn-block">
+                      Go to Benefit
+                    </button>
+                  </a>
+                )}
               </div>
             </div>
           );

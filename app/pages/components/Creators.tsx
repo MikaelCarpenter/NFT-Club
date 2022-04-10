@@ -43,7 +43,13 @@ const Creators: FC<CreatorsType> = ({
             : true;
 
           return (
-            <div className="card h-max bg-base-100 shadow-xl" key={key}>
+            <div
+              className="card h-max cursor-pointer bg-base-100 drop-shadow-xl hover:drop-shadow-xl-primary"
+              key={key}
+              onClick={() => {
+                router.push(`/creator-landing-page/${creatorPubKey}`);
+              }}
+            >
               <figure>
                 <Image
                   alt="Shoes"

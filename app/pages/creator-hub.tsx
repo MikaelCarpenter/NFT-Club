@@ -378,7 +378,7 @@ const CreatorHub = () => {
         <div className="no-scrollbar flex h-2/3 w-full flex-col items-center overflow-y-scroll rounded-xl p-2">
           {benefits.map((benefit, index) => (
             <BenefitCard
-              key={`${index + 1}`}
+              key={`${benefit.name as string}_${index}`}
               name={benefit.name as string}
               description={benefit.description as string}
               accessLink={benefit.accessLink as string}

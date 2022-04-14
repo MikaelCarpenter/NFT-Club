@@ -115,6 +115,12 @@ const CreatorHub = () => {
     }
   }, [user, connectedWallet, program]);
 
+  const handleDeleteBenefit = (index: number) => {
+    const benefitsCopy = [...benefits];
+    benefitsCopy.splice(index, 1);
+    setBenefits(benefitsCopy);
+  };
+
   const handleNewBenefit = async () => {
     if (connectedWallet && program) {
       const newBenefitNumber = `${benefits.length + 1}`;
@@ -193,15 +199,19 @@ const CreatorHub = () => {
       return;
     }
 
-    const creatorUsername = usernameRef.current
-      ? usernameRef.current.value
-      : user.creatorAccount.username;
-    const creatorDescription = descriptionRef.current
-      ? descriptionRef.current.value
-      : user.creatorAccount.description;
-    const creatorEmail = emailRef.current
-      ? emailRef.current.value
-      : user.creatorAccount.email;
+    const creatorUsername = (
+      usernameRef.current
+        ? usernameRef.current.value
+        : user.creatorAccount.username
+    ) as string;
+    const creatorDescription = (
+      descriptionRef.current
+        ? descriptionRef.current.value
+        : user.creatorAccount.description
+    ) as string;
+    const creatorEmail = (
+      emailRef.current ? emailRef.current.value : user.creatorAccount.email
+    ) as string;
 
     if (creatorUsername?.length === 0 || creatorDescription?.length === 0) {
       alert('A creator must have a username or description');
@@ -279,11 +289,13 @@ const CreatorHub = () => {
           <div className="prose w-full justify-self-center text-center">
             <div>
               {!isEditingName ? (
-                <h2 className="inline">{user.creatorAccount.username}</h2>
+                <h2 className="inline">
+                  {user.creatorAccount.username as string}
+                </h2>
               ) : (
                 <input
                   className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
-                  defaultValue={user.creatorAccount.username}
+                  defaultValue={user.creatorAccount.username as string}
                   ref={usernameRef}
                 ></input>
               )}
@@ -295,11 +307,13 @@ const CreatorHub = () => {
               </p>
               <div>
                 {!isEditingEmail ? (
-                  <p className="inline">{user.creatorAccount.email}</p>
+                  <p className="inline">
+                    {user.creatorAccount.email as string}
+                  </p>
                 ) : (
                   <input
                     className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
-                    defaultValue={user.creatorAccount.email}
+                    defaultValue={user.creatorAccount.email as string}
                     ref={emailRef}
                   ></input>
                 )}
@@ -322,11 +336,13 @@ const CreatorHub = () => {
             )}
             <div>
               {!isEditingDescription ? (
-                <p className="inline">{user.creatorAccount.description}</p>
+                <p className="inline">
+                  {user.creatorAccount.description as string}
+                </p>
               ) : (
                 <input
                   className="input-value ml-2 rounded-xl bg-slate-200 p-1 text-primary"
-                  defaultValue={user.creatorAccount.description}
+                  defaultValue={user.creatorAccount.description as string}
                   ref={descriptionRef}
                 ></input>
               )}
@@ -363,10 +379,12 @@ const CreatorHub = () => {
           {benefits.map((benefit, index) => (
             <BenefitCard
               key={`${index + 1}`}
-              name={benefit.name}
-              description={benefit.description}
-              accessLink={benefit.accessLink}
+              name={benefit.name as string}
+              description={benefit.description as string}
+              accessLink={benefit.accessLink as string}
               benefitNumber={`${index + 1}`}
+              handleDeleteBenefit={handleDeleteBenefit}
+              index={index}
             />
           ))}
         </div>

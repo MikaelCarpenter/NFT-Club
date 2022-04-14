@@ -25,6 +25,8 @@ interface Props {
   description: string;
   accessLink: string;
   benefitNumber: string;
+  handleDeleteBenefit: (index: number) => void;
+  index: number;
 }
 
 const BenefitCard: React.FC<Props> = ({
@@ -32,6 +34,8 @@ const BenefitCard: React.FC<Props> = ({
   description,
   accessLink,
   benefitNumber,
+  handleDeleteBenefit,
+  index,
 }) => {
   const [newName, setNewName] = useState(name);
   const [newDescription, setNewDescription] = useState(description);
@@ -114,7 +118,6 @@ const BenefitCard: React.FC<Props> = ({
   };
 
   const deleteBenefit = async () => {
-    console.log('DELETE');
     if (program && connectedWallet && user && user.creatorAccount) {
       const creatorSeeds = [
         connectedWallet.publicKey.toBuffer(),
@@ -151,7 +154,7 @@ const BenefitCard: React.FC<Props> = ({
           program.programId
         );
 
-      program.rpc.deleteBenefit(benefitNumber, lastBenefitNumber, {
+      await program.rpc.deleteBenefit(benefitNumber, lastBenefitNumber, {
         accounts: {
           benefitOld: benefitPubKey,
           benefitLast: lastBenefitPubKey,
@@ -160,6 +163,8 @@ const BenefitCard: React.FC<Props> = ({
           systemProgram: anchor.web3.SystemProgram.programId,
         },
       });
+
+      handleDeleteBenefit(index);
 
       fetchUserDetails(); // Refetch to update user's numBenefits
     }

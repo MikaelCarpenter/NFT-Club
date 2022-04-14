@@ -4,6 +4,7 @@ import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { ConfirmOptions } from '@solana/web3.js';
 
 import IDL from '../../../target/idl/nft_club.json';
+import { useUser } from '../../hooks/useUser';
 
 const PROGRAM_ID = new anchor.web3.PublicKey(
   'CZeXHMniVHpEjkXTBzbpTJWR4qzgyZfRtjvviSxoUrWZ'
@@ -24,6 +25,8 @@ interface Props {
   description: string;
   accessLink: string;
   benefitNumber: string;
+  handleDeleteBenefit: (index: number) => void;
+  index: number;
 }
 
 const BenefitCard: React.FC<Props> = ({
@@ -31,10 +34,14 @@ const BenefitCard: React.FC<Props> = ({
   description,
   accessLink,
   benefitNumber,
+  handleDeleteBenefit,
+  index,
 }) => {
   const [newName, setNewName] = useState(name);
   const [newDescription, setNewDescription] = useState(description);
   const [newAccessLink, setNewAccessLink] = useState(accessLink);
+
+  const { user, fetchUserDetails } = useUser();
 
   const connectedWallet = useAnchorWallet();
   const program = useMemo(() => {
@@ -111,7 +118,56 @@ const BenefitCard: React.FC<Props> = ({
   };
 
   const deleteBenefit = async () => {
-    console.log('DELETE');
+    if (program && connectedWallet && user && user.creatorAccount) {
+      const creatorSeeds = [
+        connectedWallet.publicKey.toBuffer(),
+        Buffer.from('creator'),
+      ];
+
+      const [creatorPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        creatorSeeds,
+        program.programId
+      );
+
+      const lastBenefitNumber = `${user.creatorAccount.numBenefits}`;
+
+      const benefitSeeds = [
+        creatorPubKey.toBuffer(),
+        Buffer.from('benefit'),
+        Buffer.from(benefitNumber),
+      ];
+
+      const lastBenefitSeeds = [
+        creatorPubKey.toBuffer(),
+        Buffer.from('benefit'),
+        Buffer.from(lastBenefitNumber),
+      ];
+
+      const [benefitPubKey] = await anchor.web3.PublicKey.findProgramAddress(
+        benefitSeeds,
+        program.programId
+      );
+
+      const [lastBenefitPubKey] =
+        await anchor.web3.PublicKey.findProgramAddress(
+          lastBenefitSeeds,
+          program.programId
+        );
+
+      await program.rpc.deleteBenefit(benefitNumber, lastBenefitNumber, {
+        accounts: {
+          benefitOld: benefitPubKey,
+          benefitLast: lastBenefitPubKey,
+          creator: creatorPubKey,
+          authority: program.provider.wallet.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        },
+      });
+
+      handleDeleteBenefit(index);
+
+      fetchUserDetails(); // Refetch to update user's numBenefits
+    }
   };
 
   return (
@@ -124,12 +180,14 @@ const BenefitCard: React.FC<Props> = ({
           onChange={(e) => setNewName(e.target.value)}
         ></input>
 
-        {/* <button
-          className="ml-8 w-20 rounded-xl bg-red-500 p-2"
-          onClick={deleteBenefit}
-        >
-          Delete
-        </button> */}
+        {
+          <button
+            className="ml-8 w-20 rounded-xl bg-red-500 p-2"
+            onClick={deleteBenefit}
+          >
+            Delete
+          </button>
+        }
 
         <button
           className="ml-8 w-20 rounded-xl bg-green-500 p-2"

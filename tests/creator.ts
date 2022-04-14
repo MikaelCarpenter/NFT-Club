@@ -85,7 +85,7 @@ describe('Creator', () => {
       balanceAfterCreation = await connection.getBalance(
         program.provider.wallet.publicKey
       );
-      expect(balanceAfterCreation).to.be.below(originalBalance);
+      expect(balanceAfterCreation).to.be.lte(originalBalance);
 
       const creatorAccount = await program.account.creator.fetch(creatorPubKey);
 

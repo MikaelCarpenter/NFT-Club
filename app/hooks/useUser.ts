@@ -79,6 +79,7 @@ export const useUser = () => {
             const creator = await nftClubProgram.account.creator.fetch(
               creatorPubKey.toBase58()
             );
+
             // Fetch all benefit keys of this creator.
             const benefitPubKeys = await Promise.all(
               Array(creator.numBenefits)
@@ -87,8 +88,8 @@ export const useUser = () => {
                   anchor.web3.PublicKey.findProgramAddress(
                     [
                       creatorPubKey.toBuffer(),
-                      anchor.utils.bytes.utf8.encode('benefit'),
-                      anchor.utils.bytes.utf8.encode(`${id + 1}`),
+                      Buffer.from('benefit'),
+                      Buffer.from(`${id + 1}`),
                     ],
                     nftClubProgram.programId
                   )
@@ -145,7 +146,13 @@ export const useUser = () => {
 
   useEffect(
     () => {
-      if (connectedWallet && program) {
+      if (
+        connectedWallet &&
+        program &&
+        !user.isLoading &&
+        !user.creatorAccount &&
+        Object.keys(user.subscriptions).length === 0
+      ) {
         fetchUserDetails();
       }
     },

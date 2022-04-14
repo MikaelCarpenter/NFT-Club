@@ -4,7 +4,7 @@ import { useUser } from '../../hooks/useUser';
 
 const Navbar = () => {
   const {
-    user: { subscriptions, isLoading },
+    user: { subscriptions, creatorAccount, isLoading },
   } = useUser();
 
   return (
@@ -21,11 +21,11 @@ const Navbar = () => {
                   <Link href="/subscription-hub">My Subscriptions</Link>
                 </li>
               )}
-              {/*creatorAccount && (
+              {creatorAccount && (
                 <li>
                   <Link href="/creator-hub">My CreatorHub</Link>
                 </li>
-              )*/}
+              )}
               <li>
                 <Link href="/creators">Creators</Link>
               </li>

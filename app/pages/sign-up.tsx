@@ -122,12 +122,11 @@ const SignUp = () => {
       await program.provider.send(txn, []);
       router.push('/creator-hub');
     }
-
   }, [benefitRefs, connectedWallet, program, router]);
 
   return (
-    <div className="flex h-full flex-col items-center justify-center">
-      <div className="prose mb-8">
+    <div className="flex h-full flex-col items-center overflow-y-auto">
+      <div className="prose mt-4 mb-8">
         <h1>Sign Up</h1>
       </div>
       <div className="form-control mb-16 w-full max-w-xs">

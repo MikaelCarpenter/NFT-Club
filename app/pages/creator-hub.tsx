@@ -283,7 +283,7 @@ const CreatorHub = () => {
   // Do all of this if a creator is found
   // All creator fields are mandatory, so extra checking should not be necessary?: Check this...
   return (
-    <div className="flex h-full w-full flex-col items-center">
+    <div className="flex h-full w-full flex-col items-center pb-4">
       {user.creatorAccount && (
         <div className="mt-4 mb-8 flex w-full flex-col-reverse items-center">
           <div className="prose w-full justify-self-center text-center">

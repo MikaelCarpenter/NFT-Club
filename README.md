@@ -45,7 +45,8 @@ Lastly, Subscriptions are the vehicle through which users support Creators, gain
 - In project root, run `npm install`
 - Run `anchor build`
 - Run `anchor deploy`
-- If `anchor deploy` fails due to insufficient funds, grant yourself more devnet SOL with `solana airdrop 2 <program_address>`
+- If `anchor deploy` fails due to insufficient funds, grant yourself more devnet SOL with `solana airdrop 2`
+ - If failed deploys drain your SOL and the airdrop is rate limiting you, you can use `solana program close --buffers` to retrieve the SOL from the failed deploys.
 - `cd app`
 - Run `npm install`
 - To start the app, run `npm run dev` and go to `http://localhost:3000` in your browser
